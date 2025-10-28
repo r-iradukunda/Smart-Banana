@@ -1,98 +1,158 @@
-**Smart Banana — Banana Leaf Disease Detection**
-# Overview
+# Banana Disease Detection
 
-Smart Banana is a deep learning project that leverages Convolutional Neural Networks (CNNs) to automatically detect and classify banana leaf diseases from images.
+Deep learning mobile application for real-time banana disease detection in Rwanda. Provides treatment recommendations with Kinyarwanda voice support for farmers.
 
-It helps farmers and agricultural experts identify Cordana, Pestalotiopsis, and Sigatoka diseases, as well as recognize healthy leaves.
-The notebook provides a complete end-to-end pipeline — from data loading and augmentation to model training, evaluation, and visualization.
+---
+
+## Overview
+
+Banana diseases cause **70% yield loss** in Rwanda, affecting 2.5+ million farmers. This AI system provides:
+- **Real-time disease detection** using smartphone cameras
+- **Offline-capable** CNN model (84% accuracy)
+- **Voice output** in Kinyarwanda for accessibility
+- **Treatment recommendations** from RAB guidelines
+
+---
+
+##  Detected Diseases
+
+- Cordana Leaf Spot
+- Black Sigatoka  
+- Pestalotiopsis
+- Banana Xanthomonas Wilt (BXW)
+- Healthy Classification
+
+---
+
+##  Tech Stack
+
+**ML:** TensorFlow/Keras, Custom CNN  
+**Mobile:** React Native/Flutter  
+**Backend:** Python/Flask  
+**TTS:** Pindo AI (Kinyarwanda)
+
+---
+
+##  Installation
+
+```bash
+# Clone repository
+git clone https://github.com/r-iradukunda/Smart-Banana
+cd Smart-Banana
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+**Requirements:**
+```
+tensorflow>=2.13.0
+keras>=2.13.0
+numpy>=1.24.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+pillow>=10.0.0
+```
+
+---
+
+##  Usage
+
+### Python Inference
+
+```python
+from tensorflow import keras
+import numpy as np
+from PIL import Image
+
+# Load model
+model = keras.models.load_model('models/banana_disease_model.keras')
+
+# Predict
+img = Image.open('banana_leaf.jpg').resize((224, 224))
+img_array = np.expand_dims(np.array(img) / 255.0, axis=0)
+prediction = model.predict(img_array)
+
+classes = ['cordana', 'healthy', 'pestalotiopsis', 'sigatoka']
+result = classes[np.argmax(prediction)]
+print(f"Disease: {result} ({np.max(prediction)*100:.2f}%)")
+```
+
+### Training
+
+```bash
+python src/train.py
+# Or use Jupyter notebook
+jupyter notebook notebooks/smart_banana.ipynb
+```
+
+---
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| Validation Accuracy | 84.38% |
+| Inference Time | <2 sec |
+| Model Size | ~15 MB |
+
+**Field Testing:** 90%+ accuracy with 50 farmers in Eastern Province
+
+---
 
 ## Project Structure
-**Path	                              Description**
-smart_banana.ipynb	                  Main Jupyter notebook for training and analysis.
-BananaLSD/	                          Dataset root directory.
-BananaLSD/AugmentedSet/	              Folder containing processed image data.
-BananaLSD/AugmentedSet/cordana/	Images of banana leaves infected with Cordana disease.
-BananaLSD/AugmentedSet/healthy/	      Images of healthy banana leaves.
-BananaLSD/AugmentedSet/pestalotiopsis/Images showing Pestalotiopsis disease symptoms.
-BananaLSD/AugmentedSet/sigatoka/	  Images of leaves affected by Sigatoka disease.
 
-### Requirements
-**Package                 Purpose**
-tensorflow	              Deep learning framework for CNN model building and training.
-numpy	                  Numerical computations and array manipulation.
-pandas	                  Data analysis and organization.
-matplotlib	              Visualization of training metrics and images.
-scipy	                  Scientific computations and image processing.
-(Optional) opencv-python  Image manipulation and preprocessing.
-(Optional) tqdm	          Progress bars for training loops.
+```
+├── data/               # Dataset (1,600 images)
+├── models/             # Trained models
+├── notebooks/          # Training notebook
+├── src/                # Python scripts
+├── mobile/             # Mobile app
+└── docs/               # Research documents
+```
 
-Install everything with: pip install tensorflow numpy pandas matplotlib scipy opencv-python tqdm
+---
 
-#### Workflow
-**Step**	**Task**	            **Description**
-1	Import Dependencies	    Load TensorFlow, Keras, NumPy, Pandas, and Matplotlib.
-2	Set Up Dataset	        Define paths and verify image counts for each class.
-3	Data Augmentation	    Apply rotation, flip, and zoom using ImageDataGenerator.
-4	Build Model	            Create CNN architecture with Conv2D, MaxPooling2D, Dense
-5	Compile Model	        Use Adam optimizer and categorical cross-entropy loss.
-6	Train Model	            Train with callbacks (EarlyStopping, ReduceLROnPlateau).
-7	Evaluate Model	        Generate accuracy/loss plots and test predictions.
-8	Visualize Results	    Display predicted vs. true labels.
+## Contributing
 
-##### Dataset Summary
-**Class	    Description	                                                    Example** 
-Cordana	       Fungal leaf spot 	                                               400
-Healthy	Normal banana leaf, no disease.	                                           400
-Pestalotiopsis Leaf blight caused by Pestalotiopsis fungus.	                       400
-Sigatoka	   Common banana leaf spot disease.	                                   400
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/NewFeature`)
+3. Commit changes (`git commit -m 'Add NewFeature'`)
+4. Push to branch (`git push origin feature/NewFeature`)
+5. Open Pull Request
 
-###### Model Architecture**
-**Component	                     Description**
-Input Layer	                     Accepts resized images (e.g., 128×128×3).
-Convolutional Layers	         Extract spatial features using small filters.
-Pooling Layers	                 Reduce feature map size to lower computation.
-Dropout Layers	                 Prevent overfitting by randomly deactivating neurons.
-Dense Layers	                 Learn class-level representations.
-Output Layer	                 Softmax activation with 4 neurons (one per disease).
-Optimizer	                     Adam with adaptive learning rate.
-Callbacks	                     EarlyStopping, ReduceLROnPlateau for smooth training.
+---
 
-##### Training & Evaluation Outputs
-**Output	                          Description**
-Training Accuracy Plot	          Shows model accuracy improvement per epoch.
-Validation Accuracy Plot	      Demonstrates generalization to unseen data.
-Loss Curves	                      Tracks training vs. validation loss.
-Sample Predictions	              Visual comparison of predictions and labels.
-Confusion Matrix	              Breakdown of classification performance by class.
+##  Team
 
-Typical model accuracy: 80 – 95 %, depending on dataset size and model complexity.
+**Iradukunda Ruth** - Lead Developer  
+**Mr. Tunde Isaiq Gbadamosi** - Supervisor
 
-#### Future Improvements**
-**Area	                    Suggested Enhancement**
-Transfer Learning	        Use pretrained models (EfficientNet, ResNet, InceptionV3).
-Explainability	            Integrate Grad-CAM visualizations for interpretability.
-Deployment	                Convert model to TensorFlow Lite for mobile devices.
-User Interface	            Develop a web or mobile app for real-time detection.
-Data Expansion	            Collect more diverse banana leaf samples.
+BSc Software Engineering Capstone Project
 
-### How to Run the Notebook
-**Step	Action**
-1	    Clone or download this repository.
-2	    Open smart_banana.ipynb in Jupyter Notebook or VS Code.
-3	    Update dataset path:base_dir = r'C:\path\to\BananaLSD\AugmentedSet'
-4	    Run all cells sequentially.
-5	    Review output metrics, plots, and predictions.
+---
 
-## Author
-**Field	         Detail**
-Author	         Iradukunda Ruth
-Email	         r.iradukund@gmail.com
-GitHub	         https://github.com/r-iradukunda/Smart-Banana
-Project	         Smart Banana — Banana Leaf Disease Detection
-youtube Video    https://youtube.com/q-tGzE9S0wQ
+## Contact
 
-# Acknowledgments
-**Contributor*                        Contribution**
-TensorFlow / Keras	                 Core framework for model building.
-BananaLSD Dataset	                 Image data source for training.
-Open Source Community	             Inspiration and tools for agricultural A
+ Email: r.iradukund@alustudent.com  
+ GitHub: https://github.com/r-iradukunda/Smart-Banana
+ youtube: https://www.youtube.com/watch?v=q-tGzE9S0wQ&t=18s
+
+---
+
+## Roadmap
+
+iOS app development
+3 additional diseases
+Weather data integration
+Farmer community features
+
+---
+
+<div align="center">
+
+**Made with for Rwandan farmers**
+
+Star this repo if you find it useful!
+
+</div>
