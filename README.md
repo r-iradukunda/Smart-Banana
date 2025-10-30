@@ -112,6 +112,15 @@ jupyter notebook notebooks/smart_banana.ipynb
 ```
 
 ---
+## Deployment Plan
+
+The model can be deployed in multiple environments:
+- **Mobile App:** Integrated into a Flutter or React Native app using TensorFlow Lite for offline predictions.
+- **Web Backend:** Serve through a Flask API for browser-based image uploads.
+- **Cloud Hosting:** Deploy on Google Cloud or AWS for large-scale farmer access.
+- **Edge Devices:** Raspberry Pi or Android devices for real-time detection in the field.
+
+---
 
 ## Contributing
 
@@ -122,7 +131,13 @@ jupyter notebook notebooks/smart_banana.ipynb
 5. Open Pull Request
 
 ---
+## Design (App Interface Screenshots)
 
+Below are examples of how the user interfaces could look:
+https://www.figma.com/make/j2fDFP2EjGJvxMcVNJtXiY/Banana?node-id=0-1&p=f&fullscreen=1
+it warks like a mobile app. press where you want to see, then it will show you
+
+---
 ##  Team
 
 **Iradukunda Ruth** - Lead Developer  
