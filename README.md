@@ -135,7 +135,8 @@ The model can be deployed in multiple environments:
 
 Below are examples of how the user interfaces could look:
 https://www.figma.com/make/j2fDFP2EjGJvxMcVNJtXiY/Banana?node-id=0-1&p=f&fullscreen=1
-it warks like a mobile app. press where you want to see, then it will show you
+
+it works like a mobile app. press where you want to see, then it will show you
 
 ---
 ##  Team
