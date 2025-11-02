@@ -452,7 +452,7 @@ const BananaDiseaseDetectionScreen: React.FC = () => {
       
       Logger.debug('Sending request to enhanced prediction API...');
       
-      const response = await fetch('http://172.20.10.2:5000/predict', requestOptions);
+      const response = await fetch('https://smart-banana.onrender.com/predict', requestOptions);
       Logger.debug('Response from prediction API:', response.status);
       
       if (!response.ok) {
