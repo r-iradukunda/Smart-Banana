@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prediction Result</title>
+</head>
+<body>
+    <h1>Prediction Result</h1>
+    <p><strong>Predicted Disease:</strong> {{ result.predicted_class }}</p>
+    <p><strong>Confidence:</strong> {{ result.confidence|round(2) }}%</p>
+    <h2>Prediction Probabilities</h2>
+    <img src="data:image/png;base64,{{ result.plot_url }}" alt="Prediction Plot">
+    <br>
+    <a href="/">Try another image</a>
+</body>
+</html>
