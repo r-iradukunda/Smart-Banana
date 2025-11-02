@@ -1,0 +1,16 @@
+{
+    "build": {
+      "production": {
+        "workflow": "managed"
+      }
+    },
+    "submit": {
+      "production": {
+        "android": {
+          "serviceAccountKeyPath": "./google-service-account.json",
+          "track": "internal"
+        }
+      }
+    }
+  }
+  
