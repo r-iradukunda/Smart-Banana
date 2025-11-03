@@ -4,37 +4,37 @@
 
 ![Banana Guard](./assets/images/banner.png)
 
-## 🌟 Features Overview
+## Features Overview
 
 ### Core Functionality
-- **🧠 AI-Powered Detection**: Advanced machine learning model with 95%+ accuracy
-- **📸 Multi-Source Image Capture**: Camera and gallery integration with quality optimization
-- **🔊 Audio Narration**: Text-to-speech in multiple languages (EN/RW/FR)
-- **📍 Location Tagging**: GPS coordinates and address reverse-geocoding
-- **💾 Comprehensive History**: Detailed scan records with search and filtering
+- ** AI-Powered Detection**: Advanced machine learning model with 95%+ accuracy
+- ** Multi-Source Image Capture**: Camera and gallery integration with quality optimization
+- ** Audio Narration**: Text-to-speech in multiple languages (EN/RW/FR)
+- ** Location Tagging**: GPS coordinates and address reverse-geocoding
+- ** Comprehensive History**: Detailed scan records with search and filtering
 
 ### Enhanced UI/UX
-- **🎨 Modern Material Design**: Contemporary color schemes and animations
-- **🌙 Dark Mode Support**: Automatic theme switching
-- **📱 Responsive Design**: Optimized for all screen sizes
-- **✨ Smooth Animations**: Engaging micro-interactions and transitions
-- **🎯 Intuitive Navigation**: Enhanced tab bar with visual feedback
+- ** Modern Material Design**: Contemporary color schemes and animations
+- ** Dark Mode Support**: Automatic theme switching
+- ** Responsive Design**: Optimized for all screen sizes
+- ** Smooth Animations**: Engaging micro-interactions and transitions
+- ** Intuitive Navigation**: Enhanced tab bar with visual feedback
 
 ### Data Management
-- **📊 Advanced Analytics**: Comprehensive statistics dashboard
-- **📈 Trend Analysis**: Disease pattern recognition over time
-- **💾 Offline Support**: Queue analysis when offline, sync when connected
-- **🔄 Data Export**: JSON, CSV, and PDF report generation
-- **☁️ Cloud Sync**: Automatic backup and synchronization
+- ** Advanced Analytics**: Comprehensive statistics dashboard
+- ** Trend Analysis**: Disease pattern recognition over time
+- ** Offline Support**: Queue analysis when offline, sync when connected
+- ** Data Export**: JSON, CSV, and PDF report generation
+- ** Cloud Sync**: Automatic backup and synchronization
 
 ### Smart Features
-- **🎓 Onboarding Experience**: Interactive app introduction
-- **⚙️ Comprehensive Settings**: Granular control over app behavior
-- **🔔 Smart Notifications**: Contextual alerts and reminders
-- **🌐 Multi-language Support**: English, Kinyarwanda, and French
-- **🔧 Expert Mode**: Advanced features for professional users
+- ** Onboarding Experience**: Interactive app introduction
+- ** Comprehensive Settings**: Granular control over app behavior
+- ** Smart Notifications**: Contextual alerts and reminders
+- ** Multi-language Support**: English, Kinyarwanda, and French
+- ** Expert Mode**: Advanced features for professional users
 
-## 🏗️ Architecture & Technology Stack
+##  Architecture & Technology Stack
 
 ### Frontend Framework
 ```typescript
@@ -110,7 +110,7 @@ smart-banana-expo/
     └── images/                   # App images
 ```
 
-## 🎨 Design System
+##  Design System
 
 ### Color Palette
 ```typescript
@@ -150,41 +150,41 @@ Caption: 12px / 400 weight
 ## 🔧 Key Enhancements Made
 
 ### 1. Modern UI Transformation
-- ✅ Replaced basic styling with Material Design 3
-- ✅ Added sophisticated color scheme with theme support
-- ✅ Implemented smooth animations and micro-interactions
-- ✅ Enhanced typography with proper scale and hierarchy
-- ✅ Added visual feedback for all user interactions
+-  Replaced basic styling with Material Design 3
+-  Added sophisticated color scheme with theme support
+-  Implemented smooth animations and micro-interactions
+-  Enhanced typography with proper scale and hierarchy
+-  Added visual feedback for all user interactions
 
 ### 2. Advanced Data Management
-- ✅ Implemented comprehensive disease history tracking
-- ✅ Added location services with reverse geocoding
-- ✅ Created robust offline support with sync capabilities
-- ✅ Built advanced analytics and statistics dashboard
-- ✅ Added data export in multiple formats (JSON, CSV, PDF)
+-  Implemented comprehensive disease history tracking
+- Added location services with reverse geocoding
+-  Created robust offline support with sync capabilities
+-  Built advanced analytics and statistics dashboard
+-  Added data export in multiple formats (JSON, CSV, PDF)
 
 ### 3. User Experience Improvements
-- ✅ Created engaging onboarding experience
-- ✅ Added comprehensive settings with user preferences
-- ✅ Implemented smart notifications system
-- ✅ Enhanced error handling with graceful fallbacks
-- ✅ Added performance monitoring and optimization
+-  Created engaging onboarding experience
+-  Added comprehensive settings with user preferences
+-  Implemented smart notifications system
+-  Enhanced error handling with graceful fallbacks
+- Added performance monitoring and optimization
 
 ### 4. Feature Expansion
-- ✅ Multi-language support (EN/RW/FR) with audio
-- ✅ Advanced camera controls with quality settings
-- ✅ Disease database with detailed information
-- ✅ Treatment recommendations with best practices
-- ✅ Expert mode for advanced users
+-  Multi-language support (EN/RW/FR) with audio
+- Advanced camera controls with quality settings
+- Disease database with detailed information
+   Treatment recommendations with best practices
+-  Expert mode for advanced users
 
 ### 5. Technical Improvements
-- ✅ Modular architecture with reusable components
-- ✅ Custom hooks for complex state management
-- ✅ Type-safe development with comprehensive TypeScript
-- ✅ Error boundaries for crash prevention
-- ✅ Performance optimization with monitoring
+- Modular architecture with reusable components
+-  Custom hooks for complex state management
+-  Type-safe development with comprehensive TypeScript
+-  Error boundaries for crash prevention
+-  Performance optimization with monitoring
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 ```bash
@@ -224,27 +224,27 @@ ANALYTICS_KEY=your-analytics-key
 SENTRY_DSN=your-sentry-dsn
 ```
 
-## 📊 Performance Metrics
+##  Performance Metrics
 
 ### App Performance
-- **🚀 Launch Time**: < 2 seconds on modern devices
-- **⚡ Navigation**: < 100ms transition animations
-- **📱 Memory Usage**: Optimized for < 100MB average
-- **🔋 Battery Efficiency**: Minimal background processing
+- ** Launch Time**: < 2 seconds on modern devices
+- ** Navigation**: < 100ms transition animations
+- ** Memory Usage**: Optimized for < 100MB average
+- ** Battery Efficiency**: Minimal background processing
 
 ### AI Model Performance
-- **🎯 Accuracy**: 95%+ disease detection rate
-- **⏱️ Response Time**: < 3 seconds average
-- **📐 Model Size**: Optimized for mobile deployment
-- **🔄 Update Frequency**: Regular model improvements
+- ** Accuracy**: 95%+ disease detection rate
+- ** Response Time**: < 3 seconds average
+- **Model Size**: Optimized for mobile deployment
+- ** Update Frequency**: Regular model improvements
 
 ### User Experience Metrics
-- **👥 User Retention**: Enhanced onboarding
-- **📈 Engagement**: Interactive features and gamification
-- **🌐 Accessibility**: WCAG 2.1 AA compliance
-- **🔧 Error Rate**: < 1% crash rate with error boundaries
+- ** User Retention**: Enhanced onboarding
+- **Engagement**: Interactive features and gamification
+- ** Accessibility**: WCAG 2.1 AA compliance
+- ** Error Rate**: < 1% crash rate with error boundaries
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 ### Unit Testing
 ```bash
@@ -276,7 +276,7 @@ npm run analyze
 npm run profile
 ```
 
-## 📦 Deployment
+## Deployment
 
 ### Development Build
 ```bash
@@ -306,7 +306,7 @@ eas update --branch production
 eas update --branch production --rollback
 ```
 
-## 🤝 Contributing
+## Contributing
 
 ### Development Workflow
 1. **Fork & Clone**: Create your feature branch
@@ -328,11 +328,7 @@ eas update --branch production --rollback
 4. **Implementation**: Development with testing
 5. **Review**: Code review and QA testing
 
-## 📄 License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **AI Model**: Powered by advanced deep learning algorithms
 - **Design Inspiration**: Material Design 3 guidelines
@@ -340,7 +336,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) file for 
 - **Community**: React Native and Expo communities
 - **Contributors**: All developers who helped improve this app
 
-## 📞 Support & Contact
+##  Support & Contact
 
 ### Technical Support
 - **Documentation**: Comprehensive guides and API reference
@@ -356,6 +352,6 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) file for 
 
 ---
 
-**Made with ❤️ for sustainable agriculture and banana farmers worldwide.**
-
-*Last updated: June 18, 2025*
+**Made with for sustainable agriculture and banana farmers worldwide.**
+Deployed link: https://smart-banana.onrender.com/apidocs/
+link to demo video: https://drive.google.com/drive/folders/1mwwaLHSDE4GvmKqhb01pL1tVzxp2ZHKN
