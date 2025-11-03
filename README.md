@@ -1,4 +1,4 @@
-# 🍌 Banana Guard - AI Disease Detection App
+# Banana Guard - AI Disease Detection App
 
 **Enhanced Version 2.0** - A comprehensive AI-powered solution for banana plantation disease detection with modern UI/UX, advanced features, and robust data management.
 
