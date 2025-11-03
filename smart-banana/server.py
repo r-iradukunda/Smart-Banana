@@ -13,27 +13,54 @@ CORS(app)
 swagger = Swagger(app)
 
 # ----------------------------
-# Google Drive model settings
+# Model file paths
 # ----------------------------
-MODEL_ID = "1RdifNpsZYjiU7dKFVXH3zCyrpp9jPcg7"
-MODEL_URL = "https://drive.google.com/uc?export=download&id=1RdifNpsZYjiU7dKFVXH3zCyrpp9jPcg7"
+BASE_DIR = os.path.dirname(__file__)
+MODEL_PATH = os.path.join(BASE_DIR, "banana_disease_classification_model1.keras")
+JSON_PATH = os.path.join(BASE_DIR, "banana_disease_classification_model.json")
+WEIGHTS_PATH = os.path.join(BASE_DIR, "banana_disease_classification_weights.h5")
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "banana_disease_classification_model.keras")
+# Google Drive URLs for downloading model files
+MODEL_FILES = {
+    "keras": {
+        "url": "https://drive.google.com/uc?export=download&id=1RdifNpsZYjiU7dKFVXH3zCyrpp9jPcg7",
+        "path": MODEL_PATH
+    },
+    # Add JSON and H5 file IDs if you have them on Google Drive
+}
 
 
 def download_model():
-    """Download the Keras model from Google Drive if it's not already cached locally."""
+    """Download the model files from Google Drive if they're not already cached locally."""
+    downloaded = False
+    
+    # Check if we have the main keras model
     if not os.path.exists(MODEL_PATH):
-        print("\ud83d\udce5 Downloading model from Google Drive...")
-        response = requests.get(MODEL_URL, stream=True)
-        if response.status_code == 200:
-            with open(MODEL_PATH, "wb") as f:
-                for chunk in response.iter_content(1024 * 1024):
-                    f.write(chunk)
-            print("\u2705 Model downloaded successfully!")
-        else:
-            print(f"\u274c Failed to download model. Status: {response.status_code}")
-            raise Exception("Model download failed.")
+        print("\ud83d\udce5 Downloading Keras model from Google Drive...")
+        try:
+            response = requests.get(MODEL_FILES["keras"]["url"], stream=True, timeout=60)
+            if response.status_code == 200:
+                with open(MODEL_PATH, "wb") as f:
+                    for chunk in response.iter_content(1024 * 1024):
+                        f.write(chunk)
+                print("\u2705 Keras model downloaded successfully!")
+                downloaded = True
+            else:
+                print(f"\u26a0\ufe0f Failed to download model. Status: {response.status_code}")
+        except Exception as e:
+            print(f"\u26a0\ufe0f Error downloading model: {e}")
+    
+    # Check if JSON and H5 files exist (for fallback loading)
+    files_exist = (
+        os.path.exists(MODEL_PATH) or 
+        (os.path.exists(JSON_PATH) and os.path.exists(WEIGHTS_PATH))
+    )
+    
+    if not files_exist:
+        print("\u274c No model files found. Please ensure model files are included in the repository.")
+        raise Exception("Model files not found.")
+    
+    return downloaded or files_exist
 
 
 # Initialize the enhanced classifier
