@@ -16,14 +16,9 @@ swagger = Swagger(app)
 # Model file paths
 # ----------------------------
 BASE_DIR = os.path.dirname(__file__)
-# Use model1.keras as it appears to be the correct trained model
-# IMPORTANT: Ensure this model file is committed to your repository
 MODEL_PATH = os.path.join(BASE_DIR, "banana_disease_classification_model1.keras")
-# JSON_PATH = os.path.join(BASE_DIR, "banana_disease_classification_model.json")
-# WEIGHTS_PATH = os.path.join(BASE_DIR, "banana_disease_classification_weights.h5")
-
-print(f"🔍 Looking for model at: {MODEL_PATH}")
-print(f"   Model exists: {os.path.exists(MODEL_PATH)}")
+JSON_PATH = os.path.join(BASE_DIR, "banana_disease_classification_model.json")
+WEIGHTS_PATH = os.path.join(BASE_DIR, "banana_disease_classification_weights.h5")
 
 # Google Drive URLs for downloading model files
 MODEL_FILES = {
@@ -57,7 +52,8 @@ def download_model():
     
     # Check if JSON and H5 files exist (for fallback loading)
     files_exist = (
-        os.path.exists(MODEL_PATH)
+        os.path.exists(MODEL_PATH) or 
+        (os.path.exists(JSON_PATH) and os.path.exists(WEIGHTS_PATH))
     )
     
     if not files_exist:
