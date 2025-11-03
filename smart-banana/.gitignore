@@ -1,12 +1,16 @@
 /BananaLSD
 # banana_disease_classification_model.keras
-/banana_disease_classification_model.h5
-/banana_disease_classification_model.json
 /banana_disease_classification_model.pb
 /banana_disease_classification_model.tflite
 /banana_disease_classification_model.tflite.zip
-/banana_disease_classification_model_weights.h5
-/banana_disease_classification_model_weights.json
 /banana_disease_classification_model_weights.pb
 __pycache__/
 venv
+.venv/
+
+# Keep these files - they're needed for deployment!
+# DO NOT ignore:
+# - banana_disease_classification_model.json
+# - banana_disease_classification_model.h5  
+# - banana_disease_classification_weights.h5
+# - banana_disease_classification_model1.keras
