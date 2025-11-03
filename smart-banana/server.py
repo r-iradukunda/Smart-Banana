@@ -16,7 +16,8 @@ swagger = Swagger(app)
 # Google Drive model settings
 # ----------------------------
 MODEL_ID = "1RdifNpsZYjiU7dKFVXH3zCyrpp9jPcg7"
-MODEL_URL = f"https://drive.google.com/uc?export=download&id={MODEL_ID}"
+MODEL_URL = "https://drive.google.com/uc?export=download&id=1RdifNpsZYjiU7dKFVXH3zCyrpp9jPcg7"
+
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "banana_disease_classification_model.keras")
 
 
