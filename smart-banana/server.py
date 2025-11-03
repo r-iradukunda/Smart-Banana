@@ -6,21 +6,44 @@ from enhanced_inference import BananaLeafClassifier
 import traceback
 from flasgger import Swagger, swag_from
 import os
-
-
+import requests
 
 app = Flask(__name__)
 CORS(app)
+swagger = Swagger(app)
 
-# Initialize the enhanced classifier
+# ----------------------------
+# Google Drive model settings
+# ----------------------------
+MODEL_ID = "1RdifNpsZYjiU7dKFVXH3zCyrpp9jPcg7"
+MODEL_URL = f"https://drive.google.com/uc?export=download&id={MODEL_ID}"
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "banana_disease_classification_model.keras")
 
+
+def download_model():
+    """Download the Keras model from Google Drive if it's not already cached locally."""
+    if not os.path.exists(MODEL_PATH):
+        print("\ud83d\udce5 Downloading model from Google Drive...")
+        response = requests.get(MODEL_URL, stream=True)
+        if response.status_code == 200:
+            with open(MODEL_PATH, "wb") as f:
+                for chunk in response.iter_content(1024 * 1024):
+                    f.write(chunk)
+            print("\u2705 Model downloaded successfully!")
+        else:
+            print(f"\u274c Failed to download model. Status: {response.status_code}")
+            raise Exception("Model download failed.")
+
+
+# Initialize the enhanced classifier
 try:
+    download_model()
     classifier = BananaLeafClassifier(MODEL_PATH)
-    print("Enhanced Banana Disease Classifier loaded successfully!")
+    print("\u2705 Enhanced Banana Disease Classifier loaded successfully!")
 except Exception as e:
-    print(f"Error loading classifier: {e}")
+    print(f"\u274c Error loading classifier: {e}")
     classifier = None
+
 
 @app.route("/")
 def home():
@@ -29,13 +52,15 @@ def home():
         "version": "2.0",
         "features": [
             "Disease classification",
-            "Non-banana leaf rejection", 
+            "Non-banana leaf rejection",
             "Confidence assessment",
             "Uncertainty detection"
         ],
         "diseases": ["cordana", "healthy", "pestalotiopsis", "sigatoka"],
         "status": "ready" if classifier else "error"
     })
+
+
 @swag_from({
     'tags': ['System'],
     'summary': 'Health check endpoint',
@@ -54,11 +79,11 @@ def home():
 })
 @app.route("/health")
 def health_check():
-    """Health check endpoint"""
     return jsonify({
         "status": "healthy" if classifier else "unhealthy",
         "model_loaded": classifier is not None
     })
+
 
 @swag_from({
     'tags': ['Prediction'],
@@ -86,57 +111,35 @@ def health_check():
                 }
             }
         },
-        400: {
-            'description': 'Invalid request (e.g. no file uploaded)'
-        },
-        500: {
-            'description': 'Model not loaded or internal error'
-        }
+        400: {'description': 'Invalid request (e.g. no file uploaded)'},
+        500: {'description': 'Model not loaded or internal error'}
     }
 })
 @app.route("/predict", methods=["POST"])
 def predict():
-    """Enhanced prediction endpoint with rejection capability"""
-    
     if classifier is None:
-        return jsonify({
-            "error": "Model not loaded",
-            "message": "The classification model failed to load. Please check server logs."
-        }), 500
-    
-    # Check if file is in request
+        return jsonify({"error": "Model not loaded"}), 500
+
     if "file" not in request.files:
-        return jsonify({
-            "error": "No file provided",
-            "message": "Please include an image file in your request."
-        }), 400
+        return jsonify({"error": "No file provided"}), 400
 
     file = request.files["file"]
-
     if file.filename == "":
-        return jsonify({
-            "error": "No file selected",
-            "message": "Please select an image file to upload."
-        }), 400
+        return jsonify({"error": "No file selected"}), 400
 
     try:
-        # Open and process the image
         image = Image.open(file.stream)
-        
-        # Get enhanced prediction with rejection capability
         result = classifier.predict_with_rejection(image)
-        
-        # Build comprehensive response with explicit type conversion
+
         response = {
             "success": True,
             "is_rejected": bool(result["is_rejected"]),
             "message": str(result["message"])
         }
-        
+
         if result["is_rejected"]:
-            # Image was rejected
             response.update({
-                "rejection_reasons": [str(reason) for reason in result["rejection_reasons"]],
+                "rejection_reasons": [str(r) for r in result["rejection_reasons"]],
                 "technical_details": {
                     "confidence": float(result["confidence"]),
                     "entropy": float(result["entropy"]),
@@ -146,82 +149,37 @@ def predict():
                 }
             })
         else:
-            # Valid banana leaf detected
             response.update({
                 "predicted_disease": str(result["predicted_class"]),
                 "confidence": f"{float(result['confidence'])*100:.2f}%",
                 "confidence_score": float(result["confidence"]),
                 "entropy": float(result["entropy"]),
-                "certainty_score": float(max(0, (2 - result["entropy"]) / 2)),  # Normalized certainty
+                "certainty_score": float(max(0, (2 - result["entropy"]) / 2)),
                 "detailed_probabilities": {
-                    str(disease): f"{float(prob)*100:.2f}%" 
-                    for disease, prob in result["all_probabilities"].items()
+                    str(d): f"{float(p)*100:.2f}%" for d, p in result["all_probabilities"].items()
                 },
                 "raw_probabilities": {str(k): float(v) for k, v in result["all_probabilities"].items()},
                 "is_leaf_like": bool(result["is_leaf_like"])
             })
-            
-            # Add disease-specific information
-            disease_info = {
-                "healthy": {
-                    "description": "The leaf appears healthy with no visible signs of disease.",
-                    "severity": "None",
-                    "recommendation": "Continue regular monitoring and good agricultural practices.",
-                    "urgent": False
-                },
-                "cordana": {
-                    "description": "Cordana leaf spot is a fungal disease causing dark spots on leaves.",
-                    "severity": "Moderate",
-                    "recommendation": "Apply fungicide and improve air circulation around plants.",
-                    "urgent": True
-                },
-                "pestalotiopsis": {
-                    "description": "Pestalotiopsis causes leaf spots and can lead to leaf blight.",
-                    "severity": "Moderate to High",
-                    "recommendation": "Remove affected leaves and apply appropriate fungicide treatment.",
-                    "urgent": True
-                },
-                "sigatoka": {
-                    "description": "Sigatoka is a serious fungal disease causing yellowing and black streaks.",
-                    "severity": "High",
-                    "recommendation": "Immediate fungicide treatment and removal of affected leaves required.",
-                    "urgent": True
-                }
-            }
-            
-            predicted_disease = result["predicted_class"]
-            if predicted_disease in disease_info:
-                response["disease_info"] = disease_info[predicted_disease]
-        
+
         return jsonify(response)
-        
+
     except Exception as e:
-        # Log the full error for debugging
-        print(f"Error processing image: {str(e)}")
         print(traceback.format_exc())
-        
-        return jsonify({
-            "error": "Image processing failed",
-            "message": "An error occurred while processing your image. Please ensure it's a valid image file.",
-            "details": str(e)
-        }), 500
+        return jsonify({"error": "Prediction failed", "details": str(e)}), 500
+
 
 @swag_from({
     'tags': ['Model'],
     'summary': 'Model information',
     'description': 'Get details about the model architecture, features, and thresholds.',
-    'responses': {
-        200: {
-            'description': 'Model metadata'
-        }
-    }
+    'responses': {200: {'description': 'Model metadata'}}
 })
 @app.route("/model-info")
 def model_info():
-    """Get information about the model and its capabilities"""
     if classifier is None:
         return jsonify({"error": "Model not loaded"}), 500
-        
+
     return jsonify({
         "model_type": "Convolutional Neural Network",
         "diseases": classifier.diseases,
@@ -229,7 +187,7 @@ def model_info():
         "features": [
             "Disease classification",
             "Non-banana leaf rejection",
-            "Confidence assessment", 
+            "Confidence assessment",
             "Uncertainty detection"
         ],
         "thresholds": {
@@ -244,14 +202,14 @@ def model_info():
         ]
     })
 
+
 @app.route("/test-rejection", methods=["GET"])
 def test_rejection():
-    """Test endpoint to demonstrate rejection capabilities"""
     return jsonify({
         "message": "To test rejection capabilities, upload non-banana leaf images",
         "examples_that_should_be_rejected": [
             "Photos of people",
-            "Car images", 
+            "Car images",
             "Building photos",
             "Other plant types",
             "Blurry or unclear images"
@@ -263,11 +221,7 @@ def test_rejection():
         ]
     })
 
+
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-app = Flask(__name__)
-CORS(app)
-swagger = Swagger(app)
