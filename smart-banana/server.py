@@ -156,7 +156,17 @@ def predict():
         return jsonify({"error": "No file selected"}), 400
 
     try:
+        # Load and validate image
         image = Image.open(file.stream)
+        
+        # Debug: Log image properties
+        print(f"📸 Image loaded: mode={image.mode}, size={image.size}, format={image.format}")
+        
+        # Ensure image is properly loaded and in RGB
+        if image.mode != "RGB":
+            print(f"⚠️ Converting image from {image.mode} to RGB")
+            image = image.convert("RGB")
+        
         result = classifier.predict_with_rejection(image)
 
         response = {
@@ -231,6 +241,81 @@ def model_info():
     })
 
 
+@app.route("/predict-url", methods=["POST"])
+def predict_from_url():
+    """Predict disease from an image URL"""
+    if classifier is None:
+        return jsonify({"error": "Model not loaded"}), 500
+
+    data = request.get_json()
+    if not data or "url" not in data:
+        return jsonify({"error": "No URL provided. Send JSON with 'url' field"}), 400
+
+    image_url = data["url"]
+    
+    try:
+        print(f"🌐 Downloading image from URL: {image_url}")
+        
+        # Download image from URL
+        response = requests.get(image_url, timeout=10, stream=True)
+        response.raise_for_status()
+        
+        # Open image from response content
+        image = Image.open(response.raw)
+        
+        # Debug: Log image properties
+        print(f"📸 Image loaded: mode={image.mode}, size={image.size}, format={image.format}")
+        
+        # Ensure RGB format
+        if image.mode != "RGB":
+            print(f"⚠️ Converting image from {image.mode} to RGB")
+            image = image.convert("RGB")
+        
+        # Make prediction
+        result = classifier.predict_with_rejection(image)
+
+        response_data = {
+            "success": True,
+            "is_rejected": bool(result["is_rejected"]),
+            "message": str(result["message"]),
+            "image_url": image_url
+        }
+
+        if result["is_rejected"]:
+            response_data.update({
+                "rejection_reasons": [str(r) for r in result["rejection_reasons"]],
+                "technical_details": {
+                    "confidence": float(result["confidence"]),
+                    "entropy": float(result["entropy"]),
+                    "is_leaf_like": bool(result["is_leaf_like"]),
+                    "predicted_class": str(result["predicted_class"]),
+                    "all_probabilities": {str(k): float(v) for k, v in result["all_probabilities"].items()}
+                }
+            })
+        else:
+            response_data.update({
+                "predicted_disease": str(result["predicted_class"]),
+                "confidence": f"{float(result['confidence'])*100:.2f}%",
+                "confidence_score": float(result["confidence"]),
+                "entropy": float(result["entropy"]),
+                "certainty_score": float(max(0, (2 - result["entropy"]) / 2)),
+                "detailed_probabilities": {
+                    str(d): f"{float(p)*100:.2f}%" for d, p in result["all_probabilities"].items()
+                },
+                "raw_probabilities": {str(k): float(v) for k, v in result["all_probabilities"].items()},
+                "is_leaf_like": bool(result["is_leaf_like"])
+            })
+
+        return jsonify(response_data)
+
+    except requests.RequestException as e:
+        print(f"❌ Error downloading image: {e}")
+        return jsonify({"error": "Failed to download image from URL", "details": str(e)}), 400
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": "Prediction failed", "details": str(e)}), 500
+
+
 @app.route("/test-rejection", methods=["GET"])
 def test_rejection():
     return jsonify({
@@ -246,7 +331,8 @@ def test_rejection():
             "Clear banana leaf photos",
             "Banana leaves with disease symptoms",
             "Well-lit leaf images"
-        ]
+        ],
+        "note": "Use POST /predict for file uploads or POST /predict-url for URL-based images"
     })
 
 
