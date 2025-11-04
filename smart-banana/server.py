@@ -7,69 +7,99 @@ import traceback
 from flasgger import Swagger, swag_from
 import os
 import requests
+from io import BytesIO
 
 app = Flask(__name__)
 CORS(app)
 swagger = Swagger(app)
 
 # ----------------------------
-# Model file paths
+# Model Configuration
 # ----------------------------
 BASE_DIR = os.path.dirname(__file__)
 MODEL_PATH = os.path.join(BASE_DIR, "banana_disease_classification_model1.keras")
-JSON_PATH = os.path.join(BASE_DIR, "banana_disease_classification_model.json")
-WEIGHTS_PATH = os.path.join(BASE_DIR, "banana_disease_classification_weights.h5")
 
-# Google Drive URLs for downloading model files
-MODEL_FILES = {
-    "keras": {
-        "url": "https://drive.google.com/uc?export=download&id=1RdifNpsZYjiU7dKFVXH3zCyrpp9jPcg7",
-        "path": MODEL_PATH
-    },
-    # Add JSON and H5 file IDs if you have them on Google Drive
-}
+# ✅ DROPBOX DIRECT DOWNLOAD LINK (Fixed!)
+MODEL_URL = "https://www.dropbox.com/scl/fi/yh3vawmk52yiytjiwu0ri/banana_disease_classification_model.keras?rlkey=nyan5smd637utv3e658rdvlwf&st=gup4s50k&dl=1"
+#                                                                                                                                                              ^^^
+#                                                                                                                                                         Changed 0 to 1
+
+classifier = None
 
 
 def download_model():
-    """Download the model files from Google Drive if they're not already cached locally."""
-    downloaded = False
+    """Download model from Dropbox if not exists"""
+    if os.path.exists(MODEL_PATH):
+        file_size = os.path.getsize(MODEL_PATH) / (1024 * 1024)
+        if file_size > 100:  # Valid model should be >100MB
+            print(f"✅ Model already exists ({file_size:.2f} MB)")
+            return True
+        else:
+            print(f"⚠️ Model file too small ({file_size:.2f} MB), re-downloading...")
+            os.remove(MODEL_PATH)
     
-    # Check if we have the main keras model
-    if not os.path.exists(MODEL_PATH):
-        print("\ud83d\udce5 Downloading Keras model from Google Drive...")
-        try:
-            response = requests.get(MODEL_FILES["keras"]["url"], stream=True, timeout=60)
-            if response.status_code == 200:
-                with open(MODEL_PATH, "wb") as f:
-                    for chunk in response.iter_content(1024 * 1024):
-                        f.write(chunk)
-                print("\u2705 Keras model downloaded successfully!")
-                downloaded = True
-            else:
-                print(f"\u26a0\ufe0f Failed to download model. Status: {response.status_code}")
-        except Exception as e:
-            print(f"\u26a0\ufe0f Error downloading model: {e}")
+    print("📥 Downloading model from Dropbox...")
+    print(f"URL: {MODEL_URL}")
     
-    # Check if JSON and H5 files exist (for fallback loading)
-    files_exist = (
-        os.path.exists(MODEL_PATH) or 
-        (os.path.exists(JSON_PATH) and os.path.exists(WEIGHTS_PATH))
-    )
-    
-    if not files_exist:
-        print("\u274c No model files found. Please ensure model files are included in the repository.")
-        raise Exception("Model files not found.")
-    
-    return downloaded or files_exist
+    try:
+        # Download with streaming
+        response = requests.get(MODEL_URL, stream=True, timeout=300)
+        response.raise_for_status()
+        
+        total_size = int(response.headers.get('content-length', 0))
+        print(f"📦 File size: {total_size / (1024*1024):.2f} MB")
+        
+        downloaded = 0
+        with open(MODEL_PATH, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=1024*1024):  # 1MB chunks
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if total_size > 0:
+                        progress = (downloaded / total_size) * 100
+                        print(f"⏳ Progress: {progress:.1f}%", end='\r')
+        
+        print("\n✅ Model downloaded successfully!")
+        
+        # Verify file size
+        actual_size = os.path.getsize(MODEL_PATH) / (1024 * 1024)
+        print(f"✅ Verified file size: {actual_size:.2f} MB")
+        
+        if actual_size < 100:
+            print(f"❌ ERROR: Downloaded file too small: {actual_size:.2f} MB")
+            print("Expected ~127 MB. Download may have failed.")
+            os.remove(MODEL_PATH)
+            return False
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Download failed: {e}")
+        if os.path.exists(MODEL_PATH):
+            os.remove(MODEL_PATH)
+        return False
 
 
-# Initialize the enhanced classifier
+def load_classifier():
+    """Load the classifier after downloading model"""
+    if not download_model():
+        raise Exception("Failed to download model from Dropbox")
+    
+    print("🔄 Loading classifier...")
+    clf = BananaLeafClassifier(MODEL_PATH)
+    print("✅ Classifier loaded successfully!")
+    return clf
+
+
+# Initialize classifier on startup
 try:
-    download_model()
-    classifier = BananaLeafClassifier(MODEL_PATH)
-    print("\u2705 Enhanced Banana Disease Classifier loaded successfully!")
+    print("🚀 Initializing Banana Disease Classifier...")
+    classifier = load_classifier()
+    print("🎉 Server ready!")
 except Exception as e:
-    print(f"\u274c Error loading classifier: {e}")
+    print(f"❌ Error loading classifier: {e}")
+    import traceback
+    traceback.print_exc()
     classifier = None
 
 
@@ -77,7 +107,8 @@ except Exception as e:
 def home():
     return jsonify({
         "message": "Enhanced Banana Disease Classification API",
-        "version": "2.0",
+        "version": "3.0 - Dropbox Edition",
+        "model_source": "Dropbox",
         "features": [
             "Disease classification",
             "Non-banana leaf rejection",
@@ -85,7 +116,7 @@ def home():
             "Uncertainty detection"
         ],
         "diseases": ["cordana", "healthy", "pestalotiopsis", "sigatoka"],
-        "status": "ready" if classifier else "error"
+        "status": "ready" if classifier else "model not loaded"
     })
 
 
@@ -109,7 +140,8 @@ def home():
 def health_check():
     return jsonify({
         "status": "healthy" if classifier else "unhealthy",
-        "model_loaded": classifier is not None
+        "model_loaded": classifier is not None,
+        "model_exists": os.path.exists(MODEL_PATH)
     })
 
 
@@ -168,7 +200,12 @@ def predict():
         # Ensure image is properly loaded and in RGB
         if image.mode != "RGB":
             print(f"⚠️ Converting image from {image.mode} to RGB")
-            image = image.convert("RGB")
+            if image.mode == 'RGBA':
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                background.paste(image, mask=image.split()[3])
+                image = background
+            else:
+                image = image.convert("RGB")
         
         # Verify image is valid
         if image.size[0] == 0 or image.size[1] == 0:
@@ -214,40 +251,6 @@ def predict():
         return jsonify({"error": "Prediction failed", "details": str(e)}), 500
 
 
-@swag_from({
-    'tags': ['Model'],
-    'summary': 'Model information',
-    'description': 'Get details about the model architecture, features, and thresholds.',
-    'responses': {200: {'description': 'Model metadata'}}
-})
-@app.route("/model-info")
-def model_info():
-    if classifier is None:
-        return jsonify({"error": "Model not loaded"}), 500
-
-    return jsonify({
-        "model_type": "Convolutional Neural Network",
-        "diseases": classifier.diseases,
-        "input_size": "224x224 pixels",
-        "features": [
-            "Disease classification",
-            "Non-banana leaf rejection",
-            "Confidence assessment",
-            "Uncertainty detection"
-        ],
-        "thresholds": {
-            "min_confidence": classifier.min_confidence_threshold,
-            "max_entropy": classifier.max_entropy_threshold,
-            "feature_similarity": classifier.feature_similarity_threshold
-        },
-        "rejection_criteria": [
-            "Low prediction confidence",
-            "High uncertainty (entropy)",
-            "Non-leaf-like appearance"
-        ]
-    })
-
-
 @app.route("/predict-url", methods=["POST"])
 def predict_from_url():
     """Predict disease from an image URL"""
@@ -272,7 +275,6 @@ def predict_from_url():
         response.raise_for_status()
         
         # Open image from response content (use BytesIO for proper handling)
-        from io import BytesIO
         image_bytes = BytesIO(response.content)
         image = Image.open(image_bytes)
         
@@ -285,7 +287,12 @@ def predict_from_url():
         # Ensure RGB format
         if image.mode != "RGB":
             print(f"⚠️ Converting image from {image.mode} to RGB")
-            image = image.convert("RGB")
+            if image.mode == 'RGBA':
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                background.paste(image, mask=image.split()[3])
+                image = background
+            else:
+                image = image.convert("RGB")
         
         # Verify image is valid by checking it has data
         if image.size[0] == 0 or image.size[1] == 0:
@@ -336,6 +343,75 @@ def predict_from_url():
         return jsonify({"error": "Prediction failed", "details": str(e)}), 500
 
 
+@app.route("/model-info")
+def model_info():
+    if classifier is None:
+        return jsonify({"error": "Model not loaded"}), 500
+
+    return jsonify({
+        "model_type": "Convolutional Neural Network",
+        "diseases": classifier.diseases,
+        "input_size": "224x224 pixels",
+        "model_source": "Dropbox",
+        "features": [
+            "Disease classification",
+            "Non-banana leaf rejection",
+            "Confidence assessment",
+            "Uncertainty detection"
+        ],
+        "thresholds": {
+            "min_confidence": classifier.min_confidence_threshold,
+            "max_entropy": classifier.max_entropy_threshold,
+            "feature_similarity": classifier.feature_similarity_threshold
+        },
+        "rejection_criteria": [
+            "Low prediction confidence",
+            "High uncertainty (entropy)",
+            "Non-leaf-like appearance"
+        ]
+    })
+
+
+@app.route("/debug")
+def debug_info():
+    """Debug endpoint to check model status"""
+    info = {
+        "model_loaded": classifier is not None,
+        "model_file_exists": os.path.exists(MODEL_PATH),
+        "model_url": MODEL_URL,
+        "model_source": "Dropbox",
+        "base_dir": BASE_DIR
+    }
+    
+    if os.path.exists(MODEL_PATH):
+        info["model_size_mb"] = round(os.path.getsize(MODEL_PATH) / (1024 * 1024), 2)
+    
+    if classifier and classifier.model:
+        try:
+            # Test with random noise to verify model is trained
+            random_input = np.random.rand(1, 224, 224, 3).astype(np.float32)
+            preds = classifier.model.predict(random_input, verbose=0)[0]
+            
+            info["test_predictions"] = {
+                disease: round(float(prob), 4)
+                for disease, prob in zip(classifier.diseases, preds)
+            }
+            info["test_std"] = round(float(np.std(preds)), 4)
+            
+            # If std is low, model is untrained
+            if info["test_std"] < 0.1:
+                info["warning"] = "⚠️ Model appears UNTRAINED (uniform predictions)"
+                info["trained"] = False
+            else:
+                info["status"] = "✅ Model appears TRAINED (varied predictions)"
+                info["trained"] = True
+                
+        except Exception as e:
+            info["test_error"] = str(e)
+    
+    return jsonify(info)
+
+
 @app.route("/test-rejection", methods=["GET"])
 def test_rejection():
     return jsonify({
@@ -358,4 +434,4 @@ def test_rejection():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)
