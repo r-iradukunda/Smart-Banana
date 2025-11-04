@@ -106,31 +106,48 @@ class BananaLeafClassifier:
         Returns:
             Preprocessed image array
         """
+        # Handle numpy arrays
         if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
+            image = Image.fromarray(image.astype('uint8') if image.dtype != np.uint8 else image)
         
-        # CRITICAL: Ensure RGB format and proper conversion
+        # CRITICAL: Ensure image is fully loaded (not lazy)
+        if hasattr(image, 'load'):
+            image.load()
+        
+        # CRITICAL: Ensure RGB format with proper conversion
+        # This handles RGBA, grayscale, and other formats consistently
         if image.mode != "RGB":
-            image = image.convert("RGB")
+            # For RGBA images, composite over white background
+            if image.mode == 'RGBA':
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                background.paste(image, mask=image.split()[3])  # Use alpha channel as mask
+                image = background
+            else:
+                image = image.convert("RGB")
         
         # CRITICAL: Use high-quality resizing to preserve features
-        # PIL.Image.LANCZOS is high quality and matches training preprocessing
+        # PIL.Image.LANCZOS (now LANCZOS) is high quality and matches training preprocessing
         image = image.resize(target_size, Image.Resampling.LANCZOS)
         
-        # Convert to array
+        # Convert to array using keras preprocessing
         img_array = img_to_array(image)
         
-        # CRITICAL: Ensure proper data type (float32)
+        # CRITICAL: Ensure proper data type (float32) for consistency
         img_array = img_array.astype(np.float32)
+        
+        # CRITICAL: Normalize to [0, 1] range (must match training!)
+        # Do this BEFORE adding batch dimension for consistency
+        img_array = img_array / 255.0
+        
+        # Ensure values are clipped to valid range [0, 1]
+        img_array = np.clip(img_array, 0.0, 1.0)
         
         # Add batch dimension
         img_array = np.expand_dims(img_array, axis=0)
         
-        # CRITICAL: Normalize to [0, 1] range (must match training!)
-        img_array = img_array / 255.0
-        
-        # Ensure values are clipped to valid range
-        img_array = np.clip(img_array, 0.0, 1.0)
+        # Verify array shape is correct
+        assert img_array.shape == (1, target_size[0], target_size[1], 3), \
+            f"Expected shape (1, {target_size[0]}, {target_size[1]}, 3), got {img_array.shape}"
         
         return img_array
     
