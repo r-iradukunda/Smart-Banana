@@ -97,6 +97,7 @@ class BananaLeafClassifier:
     def preprocess_image(self, image, target_size=(224, 224)):
         """
         Preprocess the input image for model prediction.
+        CRITICAL: This must match the exact preprocessing used during training!
         
         Args:
             image: PIL Image or numpy array
@@ -108,17 +109,28 @@ class BananaLeafClassifier:
         if isinstance(image, np.ndarray):
             image = Image.fromarray(image)
         
-        # Ensure RGB format
+        # CRITICAL: Ensure RGB format and proper conversion
         if image.mode != "RGB":
             image = image.convert("RGB")
-            
-        # Resize image
-        image = image.resize(target_size)
         
-        # Convert to array and normalize
+        # CRITICAL: Use high-quality resizing to preserve features
+        # PIL.Image.LANCZOS is high quality and matches training preprocessing
+        image = image.resize(target_size, Image.Resampling.LANCZOS)
+        
+        # Convert to array
         img_array = img_to_array(image)
+        
+        # CRITICAL: Ensure proper data type (float32)
+        img_array = img_array.astype(np.float32)
+        
+        # Add batch dimension
         img_array = np.expand_dims(img_array, axis=0)
+        
+        # CRITICAL: Normalize to [0, 1] range (must match training!)
         img_array = img_array / 255.0
+        
+        # Ensure values are clipped to valid range
+        img_array = np.clip(img_array, 0.0, 1.0)
         
         return img_array
     
