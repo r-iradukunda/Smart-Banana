@@ -1,0 +1,9 @@
+Model File Hash Reference
+========================================
+
+File: banana_disease_classification_model1.keras
+Size: 134,079,249 bytes (127.87 MB)
+MD5 Hash: 9baea5bd069197d57116a38352edc017
+
+Use this hash to verify the model file on your hosted server.
+If hashes don't match, the file is corrupted or different.
