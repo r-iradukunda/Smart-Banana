@@ -159,6 +159,9 @@ def predict():
         # Load and validate image
         image = Image.open(file.stream)
         
+        # CRITICAL: Fully load the image to ensure it's not lazy-loaded
+        image.load()
+        
         # Debug: Log image properties
         print(f"📸 Image loaded: mode={image.mode}, size={image.size}, format={image.format}")
         
@@ -166,6 +169,10 @@ def predict():
         if image.mode != "RGB":
             print(f"⚠️ Converting image from {image.mode} to RGB")
             image = image.convert("RGB")
+        
+        # Verify image is valid
+        if image.size[0] == 0 or image.size[1] == 0:
+            raise ValueError("Invalid image dimensions")
         
         result = classifier.predict_with_rejection(image)
 
@@ -256,12 +263,21 @@ def predict_from_url():
     try:
         print(f"🌐 Downloading image from URL: {image_url}")
         
-        # Download image from URL
-        response = requests.get(image_url, timeout=10, stream=True)
+        # Download image from URL with proper content handling and headers
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
+        }
+        response = requests.get(image_url, timeout=15, headers=headers, allow_redirects=True)
         response.raise_for_status()
         
-        # Open image from response content
-        image = Image.open(response.raw)
+        # Open image from response content (use BytesIO for proper handling)
+        from io import BytesIO
+        image_bytes = BytesIO(response.content)
+        image = Image.open(image_bytes)
+        
+        # CRITICAL: Fully load the image to ensure it's not lazy-loaded
+        image.load()
         
         # Debug: Log image properties
         print(f"📸 Image loaded: mode={image.mode}, size={image.size}, format={image.format}")
@@ -270,6 +286,10 @@ def predict_from_url():
         if image.mode != "RGB":
             print(f"⚠️ Converting image from {image.mode} to RGB")
             image = image.convert("RGB")
+        
+        # Verify image is valid by checking it has data
+        if image.size[0] == 0 or image.size[1] == 0:
+            raise ValueError("Invalid image dimensions")
         
         # Make prediction
         result = classifier.predict_with_rejection(image)
