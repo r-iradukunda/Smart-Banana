@@ -1,10 +1,9 @@
 import numpy as np
 import cv2
-from tensorflow import keras
+from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image
 import json
-import os
 
 class BananaLeafClassifier:
     def __init__(self, model_path, class_indices_path=None):
@@ -15,89 +14,17 @@ class BananaLeafClassifier:
             model_path: Path to the trained model
             class_indices_path: Path to class indices JSON file
         """
-        # Try multiple loading strategies for compatibility
-        self.model = self._load_model_safe(model_path)
+        self.model = load_model(model_path, compile=False)
         self.diseases = ['cordana', 'healthy', 'pestalotiopsis', 'sigatoka']
         
         # Thresholds for rejection (these can be tuned based on validation data)
         self.min_confidence_threshold = 0.6  # Minimum confidence for the top prediction
         self.max_entropy_threshold = 1.2     # Maximum entropy allowed
         self.feature_similarity_threshold = 0.3  # Minimum feature similarity to training data
-    
-    def _load_model_safe(self, model_path):
-        """
-        Safely load model with multiple fallback strategies.
-        """
-        print(f"🔄 Attempting to load model from {model_path}...")
         
-        # Strategy 1: Direct load with Keras 3 compatibility
-        try:
-            print("Strategy 1: Loading with keras.models.load_model...")
-            model = keras.models.load_model(model_path, compile=False)
-            print("✅ Model loaded successfully with Strategy 1")
-            return model
-        except Exception as e1:
-            print(f"⚠️ Strategy 1 failed: {e1}")
-        
-        # Strategy 2: Try loading from JSON + weights if available
-        try:
-            print("Strategy 2: Loading from JSON + H5 weights...")
-            base_path = os.path.dirname(model_path)
-            json_path = os.path.join(base_path, 'banana_disease_classification_model.json')
-            weights_path = os.path.join(base_path, 'banana_disease_classification_weights.h5')
-            
-            if os.path.exists(json_path) and os.path.exists(weights_path):
-                with open(json_path, 'r') as f:
-                    model_json = f.read()
-                from tensorflow.keras.models import model_from_json
-                model = model_from_json(model_json)
-                model.load_weights(weights_path)
-                print("✅ Model loaded successfully with Strategy 2")
-                return model
-            else:
-                print(f"⚠️ JSON or weights file not found")
-        except Exception as e2:
-            print(f"⚠️ Strategy 2 failed: {e2}")
-        
-        # Strategy 3: Rebuild from config
-        try:
-            print("Strategy 3: Rebuilding from scratch...")
-            # Build a simple CNN that matches the expected architecture
-            model = self._build_fallback_model()
-            print("✅ Using fallback model architecture")
-            return model
-        except Exception as e3:
-            print(f"⚠️ Strategy 3 failed: {e3}")
-            raise Exception(f"All model loading strategies failed. Last error: {e3}")
-    
-    def _build_fallback_model(self):
-        """
-        Build a fallback model architecture if loading fails.
-        This should match your training architecture.
-        """
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-        
-        model = Sequential([
-            Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 3)),
-            MaxPooling2D(2, 2),
-            Conv2D(64, (3, 3), activation='relu'),
-            MaxPooling2D(2, 2),
-            Conv2D(128, (3, 3), activation='relu'),
-            MaxPooling2D(2, 2),
-            Flatten(),
-            Dense(128, activation='relu'),
-            Dropout(0.5),
-            Dense(4, activation='softmax')
-        ])
-        
-        print("⚠️ WARNING: Using fallback model without trained weights!")
-        return model
-        
-    def preprocess_image(self, image, target_size=(224, 224)):
+    def preprocess_image(self, image, target_size=(160, 160)):
         """
         Preprocess the input image for model prediction.
-        CRITICAL: This must match the exact preprocessing used during training!
         
         Args:
             image: PIL Image or numpy array
@@ -106,48 +33,20 @@ class BananaLeafClassifier:
         Returns:
             Preprocessed image array
         """
-        # Handle numpy arrays
         if isinstance(image, np.ndarray):
-            image = Image.fromarray(image.astype('uint8') if image.dtype != np.uint8 else image)
+            image = Image.fromarray(image)
         
-        # CRITICAL: Ensure image is fully loaded (not lazy)
-        if hasattr(image, 'load'):
-            image.load()
-        
-        # CRITICAL: Ensure RGB format with proper conversion
-        # This handles RGBA, grayscale, and other formats consistently
+        # Ensure RGB format
         if image.mode != "RGB":
-            # For RGBA images, composite over white background
-            if image.mode == 'RGBA':
-                background = Image.new('RGB', image.size, (255, 255, 255))
-                background.paste(image, mask=image.split()[3])  # Use alpha channel as mask
-                image = background
-            else:
-                image = image.convert("RGB")
+            image = image.convert("RGB")
+            
+        # Resize image
+        image = image.resize(target_size)
         
-        # CRITICAL: Use high-quality resizing to preserve features
-        # PIL.Image.LANCZOS (now LANCZOS) is high quality and matches training preprocessing
-        image = image.resize(target_size, Image.Resampling.LANCZOS)
-        
-        # Convert to array using keras preprocessing
+        # Convert to array and normalize
         img_array = img_to_array(image)
-        
-        # CRITICAL: Ensure proper data type (float32) for consistency
-        img_array = img_array.astype(np.float32)
-        
-        # CRITICAL: Normalize to [0, 1] range (must match training!)
-        # Do this BEFORE adding batch dimension for consistency
-        img_array = img_array / 255.0
-        
-        # Ensure values are clipped to valid range [0, 1]
-        img_array = np.clip(img_array, 0.0, 1.0)
-        
-        # Add batch dimension
         img_array = np.expand_dims(img_array, axis=0)
-        
-        # Verify array shape is correct
-        assert img_array.shape == (1, target_size[0], target_size[1], 3), \
-            f"Expected shape (1, {target_size[0]}, {target_size[1]}, 3), got {img_array.shape}"
+        img_array = img_array / 255.0
         
         return img_array
     
