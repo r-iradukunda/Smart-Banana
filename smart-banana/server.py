@@ -4,19 +4,13 @@ from PIL import Image
 from flask_cors import CORS
 from enhanced_inference import BananaLeafClassifier
 import traceback
-from flasgger import Swagger, swag_from
-import os
-
-
 
 app = Flask(__name__)
 CORS(app)
 
 # Initialize the enhanced classifier
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "saved_models", "banana_mobilenetv2_final.keras")
-
 try:
-    classifier = BananaLeafClassifier(MODEL_PATH)
+    classifier = BananaLeafClassifier('saved_models/banana_mobilenetv2_final.keras')
     print("Enhanced Banana Disease Classifier loaded successfully!")
 except Exception as e:
     print(f"Error loading classifier: {e}")
@@ -36,22 +30,7 @@ def home():
         "diseases": ["cordana", "healthy", "pestalotiopsis", "sigatoka"],
         "status": "ready" if classifier else "error"
     })
-@swag_from({
-    'tags': ['System'],
-    'summary': 'Health check endpoint',
-    'description': 'Returns server health and model status.',
-    'responses': {
-        200: {
-            'description': 'System health info',
-            'examples': {
-                'application/json': {
-                    "status": "healthy",
-                    "model_loaded": True
-                }
-            }
-        }
-    }
-})
+
 @app.route("/health")
 def health_check():
     """Health check endpoint"""
@@ -60,40 +39,6 @@ def health_check():
         "model_loaded": classifier is not None
     })
 
-@swag_from({
-    'tags': ['Prediction'],
-    'summary': 'Predict banana leaf disease',
-    'description': 'Uploads an image and returns predicted disease or rejection reason.',
-    'consumes': ['multipart/form-data'],
-    'parameters': [
-        {
-            'name': 'file',
-            'in': 'formData',
-            'type': 'file',
-            'required': True,
-            'description': 'Image file of a banana leaf.'
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Prediction results',
-            'examples': {
-                'application/json': {
-                    "success": True,
-                    "predicted_disease": "sigatoka",
-                    "confidence": "98.23%",
-                    "certainty_score": 0.94
-                }
-            }
-        },
-        400: {
-            'description': 'Invalid request (e.g. no file uploaded)'
-        },
-        500: {
-            'description': 'Model not loaded or internal error'
-        }
-    }
-})
 @app.route("/predict", methods=["POST"])
 def predict():
     """Enhanced prediction endpoint with rejection capability"""
@@ -206,16 +151,6 @@ def predict():
             "details": str(e)
         }), 500
 
-@swag_from({
-    'tags': ['Model'],
-    'summary': 'Model information',
-    'description': 'Get details about the model architecture, features, and thresholds.',
-    'responses': {
-        200: {
-            'description': 'Model metadata'
-        }
-    }
-})
 @app.route("/model-info")
 def model_info():
     """Get information about the model and its capabilities"""
@@ -264,10 +199,4 @@ def test_rejection():
     })
 
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-
-app = Flask(__name__)
-CORS(app)
-swagger = Swagger(app)
+    app.run(host='0.0.0.0', debug=True, port=5000)
