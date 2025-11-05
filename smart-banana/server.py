@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Initialize the enhanced classifier
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "banana_mobilenetv2_final.keras")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "saved_models", "banana_mobilenetv2_final.keras")
 
 try:
     classifier = BananaLeafClassifier(MODEL_PATH)
