@@ -10,7 +10,7 @@ CORS(app)
 
 # Initialize the enhanced classifier
 try:
-    classifier = BananaLeafClassifier('banana_mobilenetv2_final.keras')
+    classifier = BananaLeafClassifier('smart-banana/saved_models/banana_mobilenetv2_final.keras')
     print("Enhanced Banana Disease Classifier loaded successfully!")
 except Exception as e:
     print(f"Error loading classifier: {e}")
