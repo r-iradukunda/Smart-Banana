@@ -188,14 +188,13 @@ def test_classifier():
     Test function to demonstrate the enhanced classifier.
     """
     try:
-        classifier = BananaLeafClassifier('banana_disease_classification_model.keras')
+        classifier = BananaLeafClassifier('smart-banana/saved_models/banana_mobilenetv2_final.keras')
         print("Enhanced Banana Leaf Classifier loaded successfully!")
         print(f"Diseases: {classifier.diseases}")
-        print(f"Confidence threshold: {classifier.min_confidence_threshold}")
-        print(f"Entropy threshold: {classifier.max_entropy_threshold}")
         return classifier
     except Exception as e:
         print(f"Error loading classifier: {e}")
+        import traceback; traceback.print_exc()
         return None
 
 if __name__ == "__main__":
