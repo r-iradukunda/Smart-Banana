@@ -2,7 +2,7 @@
 
 # dependencies
 node_modules/
-/smart-banana/saved_models
+# /smart-banana/saved_models
 # Expo
 .expo/
 dist/
