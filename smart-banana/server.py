@@ -4,17 +4,40 @@ from PIL import Image
 from flask_cors import CORS
 from enhanced_inference import BananaLeafClassifier
 import traceback
+import os
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.models import load_model
+from tensorflow.keras.applications import MobileNetV2
+
+
+
+# --- Safe model loader ---
+def safe_load_model(model_path):
+    try:
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model not found at {model_path}")
+        model = keras.models.load_model(model_path, compile=False)
+        print(f"✅ Model loaded successfully from {model_path}")
+        return model
+    except Exception as e:
+        print(f"❌ Model loading failed: {e}")
+        import traceback; traceback.print_exc()
+        return None
 
 app = Flask(__name__)
 CORS(app)
 
 # Initialize the enhanced classifier
 try:
-    classifier = BananaLeafClassifier('saved_models/banana_mobilenetv2_final.keras')
+    model_path = os.path.join("smart-banana", "saved_models", "banana_mobilenetv2_final.keras")
+    test_model = safe_load_model(model_path)
+    classifier = BananaLeafClassifier(model_path)
     print("Enhanced Banana Disease Classifier loaded successfully!")
 except Exception as e:
     print(f"Error loading classifier: {e}")
     classifier = None
+
 
 @app.route("/")
 def home():
