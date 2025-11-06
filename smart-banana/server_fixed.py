@@ -2,19 +2,62 @@ from flask import Flask, request, jsonify
 import numpy as np
 from PIL import Image
 from flask_cors import CORS
-from enhanced_inference import BananaLeafClassifier
 import traceback
+import os
+import sys
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize the enhanced classifier
-try:
-    classifier = BananaLeafClassifier('saved_models/banana_mobilenetv2_final.keras')
-    print("Enhanced Banana Disease Classifier loaded successfully!")
-except Exception as e:
-    print(f"Error loading classifier: {e}")
-    classifier = None
+# Global variable for classifier
+classifier = None
+
+def initialize_classifier():
+    """Initialize the classifier with proper error handling"""
+    global classifier
+    try:
+        from enhanced_inference import BananaLeafClassifier
+        
+        # Try multiple possible model paths
+        possible_paths = [
+            'saved_models/banana_mobilenetv2_final.keras',
+            'banana_mobilenetv2_final.keras',
+            os.path.join(os.path.dirname(__file__), 'saved_models', 'banana_mobilenetv2_final.keras'),
+            os.path.join(os.path.dirname(__file__), 'banana_mobilenetv2_final.keras'),
+        ]
+        
+        model_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                model_path = path
+                print(f"Found model at: {model_path}")
+                break
+        
+        if model_path is None:
+            # List files to debug
+            print("Current directory:", os.getcwd())
+            print("Script directory:", os.path.dirname(__file__))
+            print("Files in current directory:")
+            for item in os.listdir('.'):
+                print(f"  {item}")
+            if os.path.exists('saved_models'):
+                print("Files in saved_models:")
+                for item in os.listdir('saved_models'):
+                    print(f"  {item}")
+            raise FileNotFoundError("Model file not found in any expected location")
+        
+        classifier = BananaLeafClassifier(model_path)
+        print("Enhanced Banana Disease Classifier loaded successfully!")
+        return True
+        
+    except Exception as e:
+        print(f"Error loading classifier: {e}")
+        print(traceback.format_exc())
+        return False
+
+# Try to initialize on startup
+print("Initializing classifier...")
+initialization_success = initialize_classifier()
 
 @app.route("/")
 def home():
@@ -28,7 +71,8 @@ def home():
             "Uncertainty detection"
         ],
         "diseases": ["cordana", "healthy", "pestalotiopsis", "sigatoka"],
-        "status": "ready" if classifier else "error"
+        "status": "ready" if classifier else "error",
+        "model_loaded": classifier is not None
     })
 
 @app.route("/health")
@@ -36,18 +80,48 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         "status": "healthy" if classifier else "unhealthy",
-        "model_loaded": classifier is not None
+        "model_loaded": classifier is not None,
+        "python_version": sys.version,
+        "cwd": os.getcwd()
     })
+
+@app.route("/debug")
+def debug_info():
+    """Debug endpoint to check file system"""
+    try:
+        debug_data = {
+            "cwd": os.getcwd(),
+            "script_dir": os.path.dirname(__file__),
+            "files_in_cwd": os.listdir('.'),
+            "model_exists": {
+                "saved_models/banana_mobilenetv2_final.keras": os.path.exists('saved_models/banana_mobilenetv2_final.keras'),
+                "banana_mobilenetv2_final.keras": os.path.exists('banana_mobilenetv2_final.keras'),
+            },
+            "saved_models_exists": os.path.exists('saved_models'),
+        }
+        
+        if os.path.exists('saved_models'):
+            debug_data["saved_models_contents"] = os.listdir('saved_models')
+        
+        return jsonify(debug_data)
+    except Exception as e:
+        return jsonify({"error": str(e), "traceback": traceback.format_exc()})
 
 @app.route("/predict", methods=["POST"])
 def predict():
     """Enhanced prediction endpoint with rejection capability"""
     
+    global classifier
+    
+    # Try to reinitialize if classifier is None
     if classifier is None:
-        return jsonify({
-            "error": "Model not loaded",
-            "message": "The classification model failed to load. Please check server logs."
-        }), 500
+        print("Classifier not loaded, attempting to initialize...")
+        if not initialize_classifier():
+            return jsonify({
+                "error": "Model not loaded",
+                "message": "The classification model failed to load. Please check server logs.",
+                "hint": "Visit /debug endpoint for more information"
+            }), 500
     
     # Check if file is in request
     if "file" not in request.files:
@@ -160,7 +234,7 @@ def model_info():
     return jsonify({
         "model_type": "Convolutional Neural Network",
         "diseases": classifier.diseases,
-        "input_size": "224x224 pixels",
+        "input_size": "160x160 pixels",
         "features": [
             "Disease classification",
             "Non-banana leaf rejection",
@@ -199,6 +273,5 @@ def test_rejection():
     })
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000)) 
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=False)
