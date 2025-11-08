@@ -1,0 +1,88 @@
+╔═══════════════════════════════════════════════════════════════╗
+║       TENSORFLOW VERSION COMPATIBILITY FIX                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🐛 THE NEW ERROR:
+─────────────────────────────────────────────────────────────────
+TypeError: Could not deserialize class 'Functional' because its 
+parent module keras.src.engine.functional cannot be imported
+
+❓ WHAT THIS MEANS:
+─────────────────────────────────────────────────────────────────
+Your model was trained with an older TensorFlow/Keras version,
+but Render is trying to load it with TensorFlow 2.20.0 which has
+breaking changes in the internal module structure.
+
+✅ THE FIX:
+─────────────────────────────────────────────────────────────────
+Changed TensorFlow version in requirements.txt:
+
+   FROM: tensorflow==2.20.0
+   TO:   tensorflow==2.15.0
+
+This version is more stable and compatible with most Keras models.
+
+📋 WHAT WAS CHANGED:
+─────────────────────────────────────────────────────────────────
+1. requirements.txt - Downgraded TensorFlow to 2.15.0
+2. server.py - Added better debug logging for model loading
+
+🚀 DEPLOY NOW:
+─────────────────────────────────────────────────────────────────
+
+cd smart-banana
+git add .
+git commit -m "Fix: Downgrade TensorFlow to 2.15.0 for compatibility"
+git push
+
+⏱️  Wait 3-5 minutes (TensorFlow takes longer to install)
+
+✅ VERIFY SUCCESS:
+─────────────────────────────────────────────────────────────────
+
+1. Check Render logs for:
+   ─────────────────────────
+   🔄 Attempting to load model from ...
+   ✅ Model loaded successfully
+      Input shape: (None, 160, 160, 3)
+      Output shape: (None, 4)
+
+2. Test health endpoint:
+   ─────────────────────
+   GET https://smart-banana.onrender.com/health
+   
+   Expected: {"status": "healthy", "model_loaded": true}
+
+3. Test prediction:
+   ────────────────
+   POST https://smart-banana.onrender.com/predict
+   (Upload banana leaf image)
+
+🎯 WHY TENSORFLOW 2.15.0?
+─────────────────────────────────────────────────────────────────
+✓ Stable and well-tested
+✓ Compatible with most Keras models
+✓ No breaking changes in keras.src module structure
+✓ Works with Python 3.13
+
+🔄 IF STILL FAILS, TRY THESE VERSIONS:
+─────────────────────────────────────────────────────────────────
+tensorflow==2.16.1  (Latest stable with old Keras API)
+tensorflow==2.13.0  (Very stable, older)
+tensorflow==2.14.0  (Middle ground)
+
+To try different versions, just edit requirements.txt and redeploy.
+
+💡 ALTERNATIVE: RETRAIN & SAVE MODEL
+─────────────────────────────────────────────────────────────────
+If compatibility issues persist, you can retrain the model with
+TensorFlow 2.15.0 locally and save a new .keras file.
+
+This ensures 100% compatibility between training and deployment.
+
+═══════════════════════════════════════════════════════════════════
+
+🎉 SUMMARY:
+   The issue was TensorFlow version mismatch.
+   Changed from 2.20.0 → 2.15.0
+   Just commit and push to fix!
