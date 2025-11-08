@@ -2,13 +2,20 @@ from flask import Flask, request, jsonify
 import numpy as np
 from PIL import Image
 from flask_cors import CORS
-from enhanced_inference import BananaLeafClassifier
 import traceback
 import os
+import sys
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications import MobileNetV2
+
+# Add the current directory to Python path for imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+from enhanced_inference import BananaLeafClassifier
 
 
 
@@ -30,9 +37,15 @@ CORS(app)
 
 # Initialize the enhanced classifier
 try:
+    # Get the directory where server.py is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    print(f"📁 Server running from: {current_dir}")
+    print(f"📁 Current working directory: {os.getcwd()}")
+    
     # Try multiple possible paths for local and deployed environments
     possible_paths = [
-        os.path.join("saved_models", "banana_mobilenetv2_final.keras"),  # Deployed path
+        os.path.join(current_dir, "saved_models", "banana_mobilenetv2_final.keras"),  # Relative to server.py
+        os.path.join("saved_models", "banana_mobilenetv2_final.keras"),  # From CWD
         os.path.join("smart-banana", "saved_models", "banana_mobilenetv2_final.keras"),  # Local path
         "banana_mobilenetv2_final.keras"  # Root directory fallback
     ]

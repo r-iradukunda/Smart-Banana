@@ -1,0 +1,76 @@
+═══════════════════════════════════════════════════════════════
+    QUICK DEPLOY COMMANDS - Copy & Paste Ready! 
+═══════════════════════════════════════════════════════════════
+
+✅ THE FIX IS ALREADY APPLIED TO server.py
+
+📋 STEP 1: COMMIT THE FIX
+───────────────────────────────────────────────────────────────
+cd smart-banana
+git add .
+git commit -m "Fix: Add current directory to Python path for imports"
+git push
+
+⏱️  STEP 2: WAIT FOR RENDER
+───────────────────────────────────────────────────────────────
+Wait 2-3 minutes for automatic deployment
+
+🧪 STEP 3: TEST YOUR API
+───────────────────────────────────────────────────────────────
+# Test 1: Health Check
+curl https://smart-banana.onrender.com/health
+
+# Expected: {"status": "healthy", "model_loaded": true}
+
+# Test 2: Debug Info
+curl https://smart-banana.onrender.com/debug
+
+# Test 3: Prediction (in Postman)
+POST https://smart-banana.onrender.com/predict
+Body: form-data, key: file (File type)
+
+═══════════════════════════════════════════════════════════════
+    RENDER DASHBOARD SETTINGS
+═══════════════════════════════════════════════════════════════
+
+Go to: https://dashboard.render.com → Your Service → Settings
+
+OPTION A (Cleaner):
+─────────────────────────────────
+Root Directory:  smart-banana
+Build Command:   pip install -r requirements.txt
+Start Command:   gunicorn server:app --bind 0.0.0.0:$PORT
+
+OPTION B (Your Current Setup):
+─────────────────────────────────
+Root Directory:  (empty)
+Build Command:   pip install -r requirements.txt
+Start Command:   gunicorn smart-banana.server:app --bind 0.0.0.0:$PORT
+
+═══════════════════════════════════════════════════════════════
+    WHAT THE FIX DOES
+═══════════════════════════════════════════════════════════════
+
+Added to server.py:
+
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
+This tells Python to also look in the smart-banana directory
+when importing modules, so it can find enhanced_inference.py
+
+═══════════════════════════════════════════════════════════════
+    EXPECTED SUCCESS LOGS ON RENDER
+═══════════════════════════════════════════════════════════════
+
+[INFO] Starting gunicorn 23.0.0
+[INFO] Listening at: http://0.0.0.0:10000
+[INFO] Booting worker with pid: 57
+📁 Server running from: /opt/render/project/src/smart-banana
+✅ Found model at: .../saved_models/banana_mobilenetv2_final.keras
+Enhanced Banana Disease Classifier loaded successfully!
+
+═══════════════════════════════════════════════════════════════
+
+🎉 YOU'RE DONE! Just run the commands above and test!
