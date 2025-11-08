@@ -30,12 +30,30 @@ CORS(app)
 
 # Initialize the enhanced classifier
 try:
-    model_path = os.path.join("smart-banana", "saved_models", "banana_mobilenetv2_final.keras")
+    # Try multiple possible paths for local and deployed environments
+    possible_paths = [
+        os.path.join("saved_models", "banana_mobilenetv2_final.keras"),  # Deployed path
+        os.path.join("smart-banana", "saved_models", "banana_mobilenetv2_final.keras"),  # Local path
+        "banana_mobilenetv2_final.keras"  # Root directory fallback
+    ]
+    
+    model_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            model_path = path
+            print(f"✅ Found model at: {path}")
+            break
+    
+    if model_path is None:
+        raise FileNotFoundError(f"Model not found in any of these paths: {possible_paths}")
+    
     test_model = safe_load_model(model_path)
     classifier = BananaLeafClassifier(model_path)
     print("Enhanced Banana Disease Classifier loaded successfully!")
 except Exception as e:
     print(f"Error loading classifier: {e}")
+    import traceback
+    traceback.print_exc()
     classifier = None
 
 
@@ -219,6 +237,26 @@ def test_rejection():
             "Banana leaves with disease symptoms",
             "Well-lit leaf images"
         ]
+    })
+
+@app.route("/debug")
+def debug_info():
+    """Debug endpoint to check file paths and system info"""
+    import sys
+    cwd = os.getcwd()
+    files_in_cwd = os.listdir(cwd) if os.path.exists(cwd) else []
+    
+    saved_models_path = os.path.join(cwd, "saved_models")
+    files_in_saved_models = os.listdir(saved_models_path) if os.path.exists(saved_models_path) else []
+    
+    return jsonify({
+        "python_version": sys.version,
+        "current_working_directory": cwd,
+        "files_in_cwd": files_in_cwd,
+        "saved_models_exists": os.path.exists(saved_models_path),
+        "files_in_saved_models": files_in_saved_models,
+        "model_loaded": classifier is not None,
+        "tensorflow_version": tf.__version__
     })
 
 if __name__ == "__main__":
