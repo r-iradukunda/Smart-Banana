@@ -24,12 +24,19 @@ def safe_load_model(model_path):
     try:
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model not found at {model_path}")
+        
+        # Try loading with compile=False to avoid optimizer issues
+        print(f"🔄 Attempting to load model from {model_path}...")
         model = keras.models.load_model(model_path, compile=False)
         print(f"✅ Model loaded successfully from {model_path}")
+        print(f"   Input shape: {model.input_shape}")
+        print(f"   Output shape: {model.output_shape}")
         return model
     except Exception as e:
         print(f"❌ Model loading failed: {e}")
-        import traceback; traceback.print_exc()
+        print(f"   TensorFlow version: {tf.__version__}")
+        import traceback
+        traceback.print_exc()
         return None
 
 app = Flask(__name__)
