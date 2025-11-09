@@ -62,10 +62,10 @@ try:
     
     # Try multiple possible paths for local and deployed environments
     possible_paths = [
-        os.path.join(current_dir, "saved_models", "banana_mobilenetv2_final.h5"),  # Relative to server.py
-        os.path.join("saved_models", "banana_mobilenetv2_final.h5"),  # From CWD
-        os.path.join("smart-banana", "saved_models", "banana_mobilenetv2_final.h5"),  # Local path
-        "banana_mobilenetv2_final.h5"  # Root directory fallback
+        os.path.join(current_dir, "saved_models", "banana_mobilenetv2_final.keras"),  # Relative to server.py
+        os.path.join("saved_models", "banana_mobilenetv2_final.keras"),  # From CWD
+        os.path.join("smart-banana", "saved_models", "banana_mobilenetv2_final.keras"),  # Local path
+        "banana_mobilenetv2_final.keras"  # Root directory fallback
     ]
     
     model_path = None
