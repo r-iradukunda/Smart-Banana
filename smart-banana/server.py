@@ -19,15 +19,26 @@ from enhanced_inference import BananaLeafClassifier
 
 
 
-# --- Safe model loader ---
+# --- Safe model loader with TF 2.20 compatibility ---
 def safe_load_model(model_path):
     try:
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model not found at {model_path}")
         
-        # Try loading with compile=False to avoid optimizer issues
         print(f"🔄 Attempting to load model from {model_path}...")
-        model = keras.models.load_model(model_path, compile=False)
+        print(f"   TensorFlow version: {tf.__version__}")
+        
+        # For TF 2.20+, use legacy keras if model has compatibility issues
+        try:
+            # Try standard loading first
+            model = keras.models.load_model(model_path, compile=False)
+        except Exception as load_error:
+            print(f"   ⚠️  Standard loading failed: {load_error}")
+            print(f"   🔄 Trying with safe_mode=False...")
+            # Try with safe_mode=False for backward compatibility
+            import keras
+            model = keras.models.load_model(model_path, compile=False, safe_mode=False)
+        
         print(f"✅ Model loaded successfully from {model_path}")
         print(f"   Input shape: {model.input_shape}")
         print(f"   Output shape: {model.output_shape}")

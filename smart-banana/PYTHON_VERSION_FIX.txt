@@ -1,0 +1,132 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         PYTHON VERSION COMPATIBILITY FIX                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🐛 THE ERROR:
+─────────────────────────────────────────────────────────────────
+ERROR: Could not find a version that satisfies the requirement 
+tensorflow==2.15.0 (from versions: 2.20.0rc0, 2.20.0)
+
+❓ WHY THIS HAPPENS:
+─────────────────────────────────────────────────────────────────
+Render is using Python 3.13.4, but TensorFlow 2.15.0 only 
+supports Python up to 3.11.x
+
+Python 3.13 only has TensorFlow 2.20.0 available!
+
+✅ SOLUTION APPLIED:
+─────────────────────────────────────────────────────────────────
+Two options implemented - BOTH are now in your code:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ OPTION 1: Use Python 3.11 (RECOMMENDED) ⭐                      │
+└─────────────────────────────────────────────────────────────────┘
+
+Created: .python-version file with content: 3.11.9
+
+This tells Render to use Python 3.11.9 which supports all 
+TensorFlow versions.
+
+PROS:
+  ✓ More TensorFlow versions available
+  ✓ Better compatibility with older models
+  ✓ More stable for ML workloads
+
+DEPLOYMENT: Just commit and push!
+
+┌─────────────────────────────────────────────────────────────────┐
+│ OPTION 2: Use Python 3.13 + TensorFlow 2.20                    │
+└─────────────────────────────────────────────────────────────────┘
+
+Updated: requirements.txt to use tensorflow==2.20.0
+Added: Compatibility layer in server.py
+
+The code now tries two loading methods:
+  1. Standard: load_model(path, compile=False)
+  2. Fallback: load_model(path, compile=False, safe_mode=False)
+
+The safe_mode=False allows loading older Keras models.
+
+PROS:
+  ✓ Uses latest Python
+  ✓ May have newer features
+  
+CONS:
+  ⚠️  Less tested with older models
+  ⚠️  May need model conversion
+
+🚀 RECOMMENDED DEPLOYMENT PATH:
+═══════════════════════════════════════════════════════════════════
+
+USE OPTION 1 (Python 3.11) - Here's why:
+
+✓ Your model was trained with older TensorFlow
+✓ Python 3.11 is stable and production-ready
+✓ Avoids compatibility headaches
+✓ Works with TensorFlow 2.13 - 2.19
+
+📋 DEPLOY NOW:
+─────────────────────────────────────────────────────────────────
+
+git add .
+git commit -m "Fix: Add Python 3.11 for TensorFlow compatibility"
+git push
+
+⚙️ RENDER SETTINGS:
+─────────────────────────────────────────────────────────────────
+Root Directory:  smart-banana
+Build Command:   pip install -r requirements.txt
+Start Command:   gunicorn server:app --bind 0.0.0.0:$PORT
+
+🔍 WHAT HAPPENS ON RENDER:
+─────────────────────────────────────────────────────────────────
+1. Render finds .python-version file
+2. Installs Python 3.11.9 automatically
+3. Installs TensorFlow 2.20.0 successfully
+4. Loads your model with compatibility layer
+
+✅ EXPECTED SUCCESS LOGS:
+─────────────────────────────────────────────────────────────────
+==> Using Python version 3.11.9
+==> Installing dependencies from requirements.txt
+Installing tensorflow-2.20.0
+✅ Successfully installed tensorflow-2.20.0
+
+==> Starting gunicorn
+📁 Server running from: /opt/render/project/src/smart-banana
+🔄 Attempting to load model...
+   TensorFlow version: 2.20.0
+✅ Model loaded successfully
+   Input shape: (None, 160, 160, 3)
+   Output shape: (None, 4)
+
+🧪 TEST AFTER DEPLOYMENT:
+─────────────────────────────────────────────────────────────────
+curl https://smart-banana.onrender.com/health
+
+Expected: {"status": "healthy", "model_loaded": true}
+
+🔄 IF YOU WANT TO TRY OPTION 2 (Python 3.13):
+─────────────────────────────────────────────────────────────────
+1. Delete the .python-version file
+2. Keep requirements.txt with tensorflow==2.20.0
+3. Commit and push
+
+The code already has the compatibility layer for TF 2.20!
+
+📝 FILES CHANGED:
+─────────────────────────────────────────────────────────────────
+✅ .python-version (NEW) - Forces Python 3.11.9
+✅ requirements.txt - tensorflow==2.20.0 + keras==3.8.0
+✅ server.py - Added safe_mode=False fallback
+
+═══════════════════════════════════════════════════════════════════
+
+🎯 SUMMARY:
+   Python 3.13 → only has TensorFlow 2.20
+   .python-version file → forces Python 3.11.9
+   Python 3.11.9 → supports all TensorFlow versions
+   
+   Just commit and push!
+
+═══════════════════════════════════════════════════════════════════
