@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import numpy as np
 from PIL import Image
 from flask_cors import CORS
+from flasgger import Swagger, swag_from
 import traceback
 import os
 import sys
@@ -53,6 +54,54 @@ def safe_load_model(model_path):
 app = Flask(__name__)
 CORS(app)
 
+# Swagger configuration
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'apispec',
+            "route": '/apispec.json',
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/apidocs"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Banana Disease Classification API",
+        "description": "AI-powered API for detecting diseases in banana leaves using deep learning. This API can identify Cordana, Pestalotiopsis, Sigatoka, and healthy banana leaves while rejecting non-banana images.",
+        "version": "2.0.0",
+        "contact": {
+            "name": "Smart Banana Team",
+            "email": "support@smartbanana.com"
+        }
+    },
+    "host": "",  # Will be set dynamically
+    "basePath": "/",
+    "schemes": ["http", "https"],
+    "tags": [
+        {
+            "name": "Health",
+            "description": "Health check endpoints"
+        },
+        {
+            "name": "Prediction",
+            "description": "Disease prediction endpoints"
+        },
+        {
+            "name": "Model Info",
+            "description": "Model information endpoints"
+        }
+    ]
+}
+
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
+
 # Initialize the enhanced classifier
 try:
     # Get the directory where server.py is located
@@ -90,6 +139,37 @@ except Exception as e:
 
 @app.route("/")
 def home():
+    """
+    Home endpoint
+    ---
+    tags:
+      - Health
+    responses:
+      200:
+        description: API information and status
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Enhanced Banana Disease Classification API
+            version:
+              type: string
+              example: "2.0"
+            features:
+              type: array
+              items:
+                type: string
+              example: ["Disease classification", "Non-banana leaf rejection"]
+            diseases:
+              type: array
+              items:
+                type: string
+              example: ["cordana", "healthy", "pestalotiopsis", "sigatoka"]
+            status:
+              type: string
+              example: ready
+    """
     return jsonify({
         "message": "Enhanced Banana Disease Classification API",
         "version": "2.0",
@@ -105,7 +185,24 @@ def home():
 
 @app.route("/health")
 def health_check():
-    """Health check endpoint"""
+    """
+    Health check endpoint
+    ---
+    tags:
+      - Health
+    responses:
+      200:
+        description: Health status of the API
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: healthy
+            model_loaded:
+              type: boolean
+              example: true
+    """
     return jsonify({
         "status": "healthy" if classifier else "unhealthy",
         "model_loaded": classifier is not None
@@ -113,7 +210,87 @@ def health_check():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    """Enhanced prediction endpoint with rejection capability"""
+    """
+    Predict banana leaf disease
+    ---
+    tags:
+      - Prediction
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: Image file of a banana leaf (JPG, PNG, JPEG)
+    responses:
+      200:
+        description: Successful prediction
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            is_rejected:
+              type: boolean
+              example: false
+            message:
+              type: string
+              example: Valid banana leaf detected
+            predicted_disease:
+              type: string
+              example: healthy
+            confidence:
+              type: string
+              example: "95.50%"
+            confidence_score:
+              type: number
+              example: 0.955
+            entropy:
+              type: number
+              example: 0.234
+            certainty_score:
+              type: number
+              example: 0.883
+            detailed_probabilities:
+              type: object
+              example:
+                healthy: "95.50%"
+                cordana: "2.30%"
+                pestalotiopsis: "1.20%"
+                sigatoka: "1.00%"
+            disease_info:
+              type: object
+              properties:
+                description:
+                  type: string
+                severity:
+                  type: string
+                recommendation:
+                  type: string
+                urgent:
+                  type: boolean
+      400:
+        description: Bad request - No file provided or invalid file
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: No file provided
+            message:
+              type: string
+      500:
+        description: Server error - Model not loaded or processing failed
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+            message:
+              type: string
+    """
     
     if classifier is None:
         return jsonify({
@@ -225,7 +402,48 @@ def predict():
 
 @app.route("/model-info")
 def model_info():
-    """Get information about the model and its capabilities"""
+    """
+    Get model information
+    ---
+    tags:
+      - Model Info
+    responses:
+      200:
+        description: Information about the model and its capabilities
+        schema:
+          type: object
+          properties:
+            model_type:
+              type: string
+              example: Convolutional Neural Network
+            diseases:
+              type: array
+              items:
+                type: string
+              example: ["cordana", "healthy", "pestalotiopsis", "sigatoka"]
+            input_size:
+              type: string
+              example: 224x224 pixels
+            features:
+              type: array
+              items:
+                type: string
+            thresholds:
+              type: object
+              properties:
+                min_confidence:
+                  type: number
+                max_entropy:
+                  type: number
+                feature_similarity:
+                  type: number
+            rejection_criteria:
+              type: array
+              items:
+                type: string
+      500:
+        description: Model not loaded
+    """
     if classifier is None:
         return jsonify({"error": "Model not loaded"}), 500
         
@@ -253,7 +471,28 @@ def model_info():
 
 @app.route("/test-rejection", methods=["GET"])
 def test_rejection():
-    """Test endpoint to demonstrate rejection capabilities"""
+    """
+    Test rejection capabilities
+    ---
+    tags:
+      - Model Info
+    responses:
+      200:
+        description: Information about testing rejection capabilities
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+            examples_that_should_be_rejected:
+              type: array
+              items:
+                type: string
+            examples_that_should_be_accepted:
+              type: array
+              items:
+                type: string
+    """
     return jsonify({
         "message": "To test rejection capabilities, upload non-banana leaf images",
         "examples_that_should_be_rejected": [
@@ -272,7 +511,36 @@ def test_rejection():
 
 @app.route("/debug")
 def debug_info():
-    """Debug endpoint to check file paths and system info"""
+    """
+    Debug information
+    ---
+    tags:
+      - Health
+    responses:
+      200:
+        description: System debug information
+        schema:
+          type: object
+          properties:
+            python_version:
+              type: string
+            current_working_directory:
+              type: string
+            files_in_cwd:
+              type: array
+              items:
+                type: string
+            saved_models_exists:
+              type: boolean
+            files_in_saved_models:
+              type: array
+              items:
+                type: string
+            model_loaded:
+              type: boolean
+            tensorflow_version:
+              type: string
+    """
     import sys
     cwd = os.getcwd()
     files_in_cwd = os.listdir(cwd) if os.path.exists(cwd) else []
