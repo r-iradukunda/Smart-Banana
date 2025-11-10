@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: smart-banana
-    env: python
-    pythonVersion: "3.12.7"
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: streamlit run smart-banana/server.py  # replace with your app entry point
