@@ -1,7 +1,7 @@
-# Core ML stack
-tensorflow==2.18.0          # TensorFlow 2.18 works perfectly with Python 3.12
-keras==3.8.0                # Compatible with TF 2.18
-numpy==1.26.4               # Last NumPy version fully compatible with TF 2.18
+# Core ML stack - Updated for better compatibility
+tensorflow==2.17.0          # More widely available, works with Python 3.9-3.12
+keras==3.4.1                # Compatible with TF 2.17
+numpy==1.26.4               # Last NumPy version fully compatible with TF 2.17
 pandas==2.2.3               # Python 3.12 compatible
 scikit-learn==1.5.2         # Python 3.12 compatible
 
