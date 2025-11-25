@@ -99,8 +99,9 @@ const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
               <View key={disease} style={styles.diseaseItem}>
                 <View style={styles.diseaseInfo}>
                   <View style={[styles.diseaseIndicator, { backgroundColor: diseaseColor }]} />
-                  <Text style={styles.diseaseName}>{disease}</Text>
-                </View>
+ <Text style={styles.diseaseName}>
+      {disease === "Cordana" ? "Xanthomonas wilt" : disease}
+    </Text>                </View>
                 <View style={styles.diseaseStats}>
                   <Text style={styles.diseaseCount}>{count}</Text>
                   <Text style={styles.diseasePercentage}>({percentage}%)</Text>
