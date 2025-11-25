@@ -10,13 +10,14 @@ import {
   Platform,
   Dimensions,
   Animated,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons, FontAwesome5, AntDesign, Ionicons } from '@expo/vector-icons';
 // LinearGradient removed due to dependency issues
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import i18n from '@/components/18n';
 import { styles } from '@/assets/styles/style';
@@ -78,6 +79,9 @@ interface ApiResponse {
 }
 
 const BananaDiseaseDetectionScreen: React.FC = () => {
+  // Safe area insets for proper spacing
+  const insets = useSafeAreaInsets();
+  
   // ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY CONDITIONAL LOGIC
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -313,8 +317,11 @@ const BananaDiseaseDetectionScreen: React.FC = () => {
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setCapturedImage(result.assets[0].uri);
-        analyzeImage(result.assets[0].uri);
+        const imageUri = result.assets[0].uri;
+        Logger.debug('Image picked:', imageUri);
+        setCapturedImage(imageUri);
+        Logger.debug('capturedImage state set to:', imageUri);
+        analyzeImage(imageUri);
       }
     } catch (error) {
       Logger.silentError('Error picking image:', error);
@@ -789,7 +796,7 @@ const BananaDiseaseDetectionScreen: React.FC = () => {
 
   // MAIN RENDER
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="light" />
       
       {/* Enhanced Header with Gradient */}
@@ -821,7 +828,11 @@ const BananaDiseaseDetectionScreen: React.FC = () => {
         </View>
       </View>
 
-      <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.contentContainer} 
+        contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}
+        showsVerticalScrollIndicator={false}
+      >
         {cameraVisible ? (
           <View style={styles.cameraContainer}>
             <CameraView 
@@ -855,13 +866,28 @@ const BananaDiseaseDetectionScreen: React.FC = () => {
             opacity: fadeAnim, 
             transform: [{ translateY: slideAnim }] 
           }}>
+            {/* Debug: Show capturedImage state */}
+           
+            
             {/* Image preview with enhanced styling */}
             {capturedImage ? (
               <View style={styles.imagePreviewContainer}>
+                <View style={{ padding: 10, backgroundColor: '#4CAF50' }}>
+                  <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+                    Image Preview (URI: {capturedImage.split('/').pop()})
+                  </Text>
+                </View>
                 <Image 
                   source={{ uri: capturedImage }} 
                   style={styles.imagePreview} 
-                  resizeMode="cover"
+                  resizeMode="contain"
+                  onError={(e) => {
+                    Logger.silentError('Image load error:', e.nativeEvent.error);
+                    Alert.alert('Image Error', 'Failed to load image. URI: ' + capturedImage);
+                  }}
+                  onLoad={() => {
+                    Logger.debug('Image loaded successfully from:', capturedImage);
+                  }}
                 />
                 <TouchableOpacity 
                   style={styles.resetButton}

@@ -31,6 +31,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack }) => {
     deleteRecord,
     clearHistory,
     getStatistics,
+    refresh,
   } = useDiseaseHistory();
 
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'healthy' | 'disease'>('all');
@@ -189,7 +190,7 @@ Scanned with Smart Banana Disease Detection App`;
             </View>
             <View style={styles.itemInfo}>
               <Text style={[styles.diseaseName, { color: diseaseColor }]}>
-                {item.disease}
+                {item.disease == "Cordana" ? "Banana Xanthomonas wilt" : item.disease == "cordana" ? "Banana Xanthomonas wilt" : item.disease == "CORDANA" ? "Banana Xanthomonas wilt": item.disease}
               </Text>
               <Text style={styles.timestamp}>
                 {item.timestamp.toLocaleDateString()} • {item.timestamp.toLocaleTimeString()}
@@ -326,6 +327,13 @@ Scanned with Smart Banana Disease Detection App`;
         
         <View style={styles.actionButtons}>
           <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={refresh}
+            disabled={loading}
+          >
+            <MaterialIcons name="refresh" size={20} color="#2E7D32" />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.clearButton}
             onPress={handleClearHistory}
             disabled={history.length === 0}
@@ -344,7 +352,7 @@ Scanned with Smart Banana Disease Detection App`;
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
         refreshing={loading}
-        onRefresh={() => {/* refresh logic */}}
+        onRefresh={refresh}
       />
     </SafeAreaView>
   );
@@ -417,6 +425,12 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#E8F5E9',
+    marginRight: 8,
   },
   clearButton: {
     padding: 8,

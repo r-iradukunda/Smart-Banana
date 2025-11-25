@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-       "infoPlist": {
+      "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
           "NSExceptionDomains": {
@@ -26,7 +26,13 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.fabfabricem.smartbananaexpo"
     },
     "web": {
       "bundler": "metro",
@@ -70,9 +76,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "7ab7942b-6f9c-4e54-94c6-6bed72f95821"
+        "projectId": "05cd1649-bece-4bce-9fbd-e576affdf749"
       }
     },
-    "owner": "muanafab"
+    "owner": "fabfabricem"
   }
 }
